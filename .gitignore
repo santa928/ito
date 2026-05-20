@@ -1,0 +1,9 @@
+.superpowers/
+docs/superpowers/
+progress.md
+node_modules/
+dist/
+dev-dist/
+tmp/
+playwright-report/
+test-results/

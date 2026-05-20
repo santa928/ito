@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-labelledby="title">
+  <title id="title">価値観カード icon 192</title>
+  <rect width="192" height="192" rx="42" fill="#f5ead8"/>
+  <rect x="42" y="30" width="108" height="132" rx="18" fill="#fffaf0" stroke="#5b3f26" stroke-width="8"/>
+  <circle cx="96" cy="78" r="18" fill="#b8572a"/>
+  <path d="M64 121h64" stroke="#5b3f26" stroke-width="9" stroke-linecap="round"/>
+  <path d="M75 141h42" stroke="#806344" stroke-width="7" stroke-linecap="round"/>
+</svg>
