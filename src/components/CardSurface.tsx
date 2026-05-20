@@ -9,7 +9,7 @@ type CardSurfaceProps = {
 export function CardSurface({ children, className = '' }: CardSurfaceProps) {
   return (
     <section
-      className={`rounded-[1.25rem] border border-[#d8c3a0] bg-[#fffaf0] p-5 shadow-[0_18px_40px_rgba(57,38,12,0.16)] ${className}`}
+      className={`paper-board rounded-[1.35rem] border border-[#a87842]/55 p-5 ${className}`}
     >
       {children}
     </section>

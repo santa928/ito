@@ -29,7 +29,7 @@ export function SetupScreen({ initialNames, onBack, onStart }: SetupScreenProps)
         人数
         <select
           aria-label="人数"
-          className="min-h-12 rounded-xl border border-[#d8c3a0] bg-white px-3 text-base"
+          className="min-h-12 rounded-xl border border-[#c79b57] bg-[#fff8e9] px-3 text-base font-bold shadow-inner"
           value={playerCount}
           onChange={(event) => setPlayerCount(Number(event.target.value))}
         >
@@ -46,7 +46,7 @@ export function SetupScreen({ initialNames, onBack, onStart }: SetupScreenProps)
             プレイヤー{index + 1}
             <input
               aria-label={`プレイヤー${index + 1}`}
-              className="min-h-12 rounded-xl border border-[#d8c3a0] bg-white px-3 text-base"
+              className="min-h-12 rounded-xl border border-[#c79b57] bg-[#fff8e9] px-3 text-base font-bold shadow-inner"
               value={name}
               onChange={(event) => updateName(index, event.target.value)}
               placeholder={`プレイヤー${index + 1}`}

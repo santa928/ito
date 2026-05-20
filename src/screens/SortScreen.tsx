@@ -49,7 +49,7 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
 
   return (
     <CardSurface>
-      <ScreenHeader eyebrow="相談" title="低いと思う順に並べる" description="ドラッグが難しい時は上下ボタンで動かせます。" />
+      <ScreenHeader eyebrow="相談" title="低い順に並べる" description="ドラッグが難しい時は上下ボタンで動かせます。" />
       <div className="grid gap-3">
         {sortedCardIds.map((cardId, index) => {
           const card = cards.find((candidate) => candidate.id === cardId)!
@@ -57,7 +57,7 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
             <div
               key={cardId}
               draggable
-              className="grid grid-cols-[1fr_auto_auto] items-center gap-2 rounded-xl border border-[#d8c3a0] bg-white p-3"
+              className="grid grid-cols-[1fr_auto_auto] items-center gap-2 rounded-2xl border border-[#c79b57] bg-[#fffaf0] p-3 shadow-[0_6px_14px_rgba(61,38,15,0.1)]"
               onDragStart={() => setDraggingCardId(cardId)}
               onDragOver={(event) => event.preventDefault()}
               onDrop={() => dropOn(cardId)}
@@ -66,10 +66,10 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
                 <p className="text-xs font-bold text-[#806344]">{index + 1}番目</p>
                 <p className="font-bold">{formatCardLabel(cards, players, card)}</p>
               </div>
-              <button className="h-10 w-10 rounded-lg bg-[#fff4d9] font-black" onClick={() => move(cardId, -1)} aria-label="上へ">
+              <button className="h-10 w-10 rounded-xl border border-[#ead19d] bg-[#fff1cf] font-black shadow-[0_3px_0_#d4af70]" onClick={() => move(cardId, -1)} aria-label="上へ">
                 ↑
               </button>
-              <button className="h-10 w-10 rounded-lg bg-[#fff4d9] font-black" onClick={() => move(cardId, 1)} aria-label="下へ">
+              <button className="h-10 w-10 rounded-xl border border-[#ead19d] bg-[#fff1cf] font-black shadow-[0_3px_0_#d4af70]" onClick={() => move(cardId, 1)} aria-label="下へ">
                 ↓
               </button>
             </div>

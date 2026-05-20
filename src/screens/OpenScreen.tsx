@@ -40,7 +40,7 @@ export function OpenScreen({
           return (
             <div
               key={cardId}
-              className={`rounded-xl border p-4 ${wasMistake ? 'border-[#b94a34] bg-[#fff0ea]' : 'border-[#d8c3a0] bg-white'}`}
+              className={`rounded-2xl border p-4 shadow-[0_6px_14px_rgba(61,38,15,0.1)] ${wasMistake ? 'border-[#b94a34] bg-[#fff0ea]' : 'border-[#c79b57] bg-[#fffaf0]'}`}
             >
               <p className="text-xs font-bold text-[#806344]">
                 {index + 1}番目 / {formatCardLabel(cards, players, card)}

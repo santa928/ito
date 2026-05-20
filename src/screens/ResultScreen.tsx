@@ -38,7 +38,7 @@ export function ResultScreen({
           const card = cards.find((candidate) => candidate.id === cardId)!
           const wasMistake = mistakeCardIds.includes(cardId)
           return (
-            <div key={cardId} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-xl border border-[#d8c3a0] bg-white p-3">
+            <div key={cardId} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-[#c79b57] bg-[#fffaf0] p-3 shadow-[0_6px_14px_rgba(61,38,15,0.1)]">
               <span className="font-black">{index + 1}</span>
               <span>{formatCardLabel(cards, players, card)}</span>
               <span className={wasMistake ? 'font-black text-[#b94a34]' : 'font-black'}>{card.value}</span>
