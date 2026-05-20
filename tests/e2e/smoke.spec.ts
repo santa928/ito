@@ -10,12 +10,20 @@ test('plays one round through result screen', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '開始' }).click()
 
   await expect(page.getByText('次は みほ さんへ')).toBeVisible()
+  await expect(page.getByText('みほ の1枚目')).toBeVisible()
+  await expect(page.getByText('みほ の2枚目')).toBeVisible()
   await page.getByRole('button', { name: '見終わった' }).click()
   await expect(page.getByText('次は ゆうと さんへ')).toBeVisible()
+  await expect(page.getByText('ゆうと の1枚目')).toBeVisible()
+  await expect(page.getByText('ゆうと の2枚目')).toBeVisible()
   await page.getByRole('button', { name: '相談へ進む' }).click()
 
   await expect(page.getByText('数字は言わず')).toBeVisible()
   await page.getByRole('button', { name: '相談して並べ替える' }).click()
+  await expect(page.getByText('みほ の1枚目')).toBeVisible()
+  await expect(page.getByText('みほ の2枚目')).toBeVisible()
+  await expect(page.getByText('ゆうと の1枚目')).toBeVisible()
+  await expect(page.getByText('ゆうと の2枚目')).toBeVisible()
   await page.getByRole('button', { name: 'この順でオープン' }).click()
 
   for (let index = 0; index < 4; index += 1) {

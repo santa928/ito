@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CardSurface } from '../components/CardSurface'
 import { PrimaryButton } from '../components/PrimaryButton'
 import { ScreenHeader } from '../components/ScreenHeader'
+import { formatCardLabel } from '../domain/cardLabels'
 import type { Card, Player } from '../domain/types'
 
 type SortScreenProps = {
@@ -52,7 +53,6 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
       <div className="grid gap-3">
         {sortedCardIds.map((cardId, index) => {
           const card = cards.find((candidate) => candidate.id === cardId)!
-          const owner = players.find((player) => player.id === card.ownerId)!
           return (
             <div
               key={cardId}
@@ -64,7 +64,7 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
             >
               <div>
                 <p className="text-xs font-bold text-[#806344]">{index + 1}番目</p>
-                <p className="font-bold">{owner.name} のカード</p>
+                <p className="font-bold">{formatCardLabel(cards, players, card)}</p>
               </div>
               <button className="h-10 w-10 rounded-lg bg-[#fff4d9] font-black" onClick={() => move(cardId, -1)} aria-label="上へ">
                 ↑

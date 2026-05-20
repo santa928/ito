@@ -1,6 +1,7 @@
 import { CardSurface } from '../components/CardSurface'
 import { PrimaryButton } from '../components/PrimaryButton'
 import { ScreenHeader } from '../components/ScreenHeader'
+import { formatCardLabel } from '../domain/cardLabels'
 import type { Card, Player } from '../domain/types'
 
 type OpenScreenProps = {
@@ -34,7 +35,6 @@ export function OpenScreen({
       <div className="grid gap-3">
         {sortedCardIds.map((cardId, index) => {
           const card = cards.find((candidate) => candidate.id === cardId)!
-          const owner = players.find((player) => player.id === card.ownerId)!
           const isOpened = openedCardIds.includes(cardId)
           const wasMistake = mistakeCardIds.includes(cardId)
           return (
@@ -43,7 +43,7 @@ export function OpenScreen({
               className={`rounded-xl border p-4 ${wasMistake ? 'border-[#b94a34] bg-[#fff0ea]' : 'border-[#d8c3a0] bg-white'}`}
             >
               <p className="text-xs font-bold text-[#806344]">
-                {index + 1}番目 / {owner.name}
+                {index + 1}番目 / {formatCardLabel(cards, players, card)}
               </p>
               <p className="mt-1 text-3xl font-black">{isOpened ? card.value : '?'}</p>
               {wasMistake ? <p className="mt-1 text-sm font-bold text-[#b94a34]">ミス</p> : null}

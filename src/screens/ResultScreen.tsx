@@ -1,6 +1,7 @@
 import { CardSurface } from '../components/CardSurface'
 import { PrimaryButton } from '../components/PrimaryButton'
 import { ScreenHeader } from '../components/ScreenHeader'
+import { formatCardLabel } from '../domain/cardLabels'
 import type { Card, Player } from '../domain/types'
 
 type ResultScreenProps = {
@@ -35,12 +36,11 @@ export function ResultScreen({
       <div className="grid gap-3">
         {openedCardIds.map((cardId, index) => {
           const card = cards.find((candidate) => candidate.id === cardId)!
-          const owner = players.find((player) => player.id === card.ownerId)!
           const wasMistake = mistakeCardIds.includes(cardId)
           return (
             <div key={cardId} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-xl border border-[#d8c3a0] bg-white p-3">
               <span className="font-black">{index + 1}</span>
-              <span>{owner.name}</span>
+              <span>{formatCardLabel(cards, players, card)}</span>
               <span className={wasMistake ? 'font-black text-[#b94a34]' : 'font-black'}>{card.value}</span>
             </div>
           )

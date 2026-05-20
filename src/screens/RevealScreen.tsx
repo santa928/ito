@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CardSurface } from '../components/CardSurface'
 import { PrimaryButton } from '../components/PrimaryButton'
 import { ScreenHeader } from '../components/ScreenHeader'
+import { formatCardLabel } from '../domain/cardLabels'
 import type { Card, Player } from '../domain/types'
 
 type RevealScreenProps = {
@@ -40,15 +41,16 @@ export function RevealScreen({ players, cards, onComplete }: RevealScreenProps) 
           {playerCards.map((card) => (
             <div
               key={card.id}
-              className="rounded-xl bg-white px-4 py-6 text-5xl font-black text-[#2f2418] shadow-inner"
+              className="rounded-xl bg-white px-4 py-5 text-[#2f2418] shadow-inner"
             >
-              {isHolding ? card.value : '?'}
+              <p className="text-sm font-bold text-[#806344]">{formatCardLabel(cards, players, card)}</p>
+              <p className="mt-2 text-5xl font-black">{isHolding ? card.value : '?'}</p>
             </div>
           ))}
         </div>
       </div>
       <button
-        className="mt-5 min-h-16 rounded-2xl bg-[#2f5d50] px-4 text-lg font-black text-white"
+        className="mt-5 min-h-16 w-full rounded-2xl bg-[#2f5d50] px-4 text-lg font-black text-white"
         onPointerDown={() => setIsHolding(true)}
         onPointerUp={() => setIsHolding(false)}
         onPointerCancel={() => setIsHolding(false)}
@@ -56,7 +58,7 @@ export function RevealScreen({ players, cards, onComplete }: RevealScreenProps) 
       >
         長押しで見る
       </button>
-      <PrimaryButton className="mt-4" onClick={next}>
+      <PrimaryButton className="mt-4 w-full" onClick={next}>
         {isLast ? '相談へ進む' : '見終わった'}
       </PrimaryButton>
     </CardSurface>
