@@ -31,7 +31,7 @@ export function OpenScreen({
 
   return (
     <CardSurface>
-      <ScreenHeader eyebrow={`ライフ ${lives}`} title="1枚ずつオープン" description="相談した順番でカードを開きます。" />
+      <ScreenHeader eyebrow={`残りライフ ${lives}`} title="1枚ずつオープン" description="高い順だと思う並びでカードを開きます。" />
       <div className="grid gap-3">
         {sortedCardIds.map((cardId, index) => {
           const card = cards.find((candidate) => candidate.id === cardId)!
@@ -43,10 +43,10 @@ export function OpenScreen({
               className={`rounded-2xl border p-4 shadow-[0_6px_14px_rgba(61,38,15,0.1)] ${wasMistake ? 'border-[#b94a34] bg-[#fff0ea]' : 'border-[#c79b57] bg-[#fffaf0]'}`}
             >
               <p className="text-xs font-bold text-[#806344]">
-                {index + 1}番目 / {formatCardLabel(cards, players, card)}
+                {index + 1}番目に高い / {formatCardLabel(cards, players, card)}
               </p>
               <p className="mt-1 text-3xl font-black">{isOpened ? card.value : '?'}</p>
-              {wasMistake ? <p className="mt-1 text-sm font-bold text-[#b94a34]">ミス</p> : null}
+              {wasMistake ? <p className="mt-1 text-sm font-bold text-[#b94a34]">順番違い</p> : null}
             </div>
           )
         })}

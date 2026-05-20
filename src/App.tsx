@@ -1,7 +1,9 @@
 import { useMemo, useReducer, useState } from 'react'
 import { Layout } from './components/Layout'
 import { PrimaryButton } from './components/PrimaryButton'
-import { getEnabledTopics } from './domain/topics'
+import { RoundControls } from './components/RoundControls'
+import { getEnabledTopics, pickTopic } from './domain/topics'
+import type { Topic } from './domain/types'
 import { HomeScreen } from './screens/HomeScreen'
 import { HowToPlayScreen } from './screens/HowToPlayScreen'
 import { OpenScreen } from './screens/OpenScreen'
@@ -20,6 +22,15 @@ function createCardValues(count: number): number[] {
     values.add(Math.floor(Math.random() * 100) + 1)
   }
   return [...values]
+}
+
+/** 現在の設定から、このラウンドで使えるお題候補を作る。 */
+function getPlayableTopics(settings: ReturnType<typeof loadSettings>): Topic[] {
+  return getEnabledTopics({
+    categoryVisibility: settings.categoryVisibility,
+    hiddenTopicIds: new Set(settings.hiddenTopicIds),
+    customTopics: settings.customTopics,
+  })
 }
 
 /** アプリの画面状態をreducerに接続し、ゲーム全体の進行を描画する。 */
@@ -47,13 +58,24 @@ export function App() {
       type: 'startRound',
       playerNames: names,
       cardValues: createCardValues(cardCount),
-      topics: getEnabledTopics({
-        categoryVisibility: nextSettings.categoryVisibility,
-        hiddenTopicIds: new Set(nextSettings.hiddenTopicIds),
-        customTopics: nextSettings.customTopics,
-      }),
+      topics: getPlayableTopics(nextSettings),
     })
   }
+
+  function rerollTopic() {
+    if (!round) {
+      return
+    }
+    const topics = getPlayableTopics(settings)
+    const candidates = topics.length > 1 ? topics.filter((topic) => topic.id !== round.topic.id) : topics
+    try {
+      dispatch({ type: 'setTopic', topic: pickTopic(candidates) })
+    } catch {
+      dispatch({ type: 'setNotice', message: 'お題を再抽選できませんでした。' })
+    }
+  }
+
+  const showRoundControls = round && ['reveal', 'topic', 'sort', 'open'].includes(state.screen)
 
   return (
     <Layout>
@@ -66,6 +88,15 @@ export function App() {
             </PrimaryButton>
           </div>
         </div>
+      ) : null}
+      {showRoundControls ? (
+        <RoundControls
+          topic={round.topic}
+          players={round.players}
+          cards={round.cards}
+          onHome={() => dispatch({ type: 'go', screen: 'home' })}
+          onRerollTopic={rerollTopic}
+        />
       ) : null}
       {state.screen === 'home' ? (
         <HomeScreen
@@ -81,7 +112,7 @@ export function App() {
         <RevealScreen players={round.players} cards={round.cards} onComplete={() => dispatch({ type: 'go', screen: 'topic' })} />
       ) : null}
       {state.screen === 'topic' && round ? (
-        <TopicScreen topic={round.topic} onNext={() => dispatch({ type: 'go', screen: 'sort' })} />
+        <TopicScreen topic={round.topic} onReroll={rerollTopic} onNext={() => dispatch({ type: 'go', screen: 'sort' })} />
       ) : null}
       {state.screen === 'sort' && round ? (
         <SortScreen

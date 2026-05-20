@@ -1,5 +1,7 @@
 import type { Card, JudgeResult, OpenedCard, Player, RoundResult } from './types'
 
+export type SortDirection = 'ascending' | 'descending'
+
 /** 入力された名前をゲーム内プレイヤーとして扱える形式へ正規化する。 */
 export function normalizePlayers(names: string[]): Player[] {
   return names.map((name, index) => {
@@ -53,12 +55,27 @@ export function calculateLives(cardCount: number): number {
   return 3
 }
 
-/** 選択カードが未オープンの最小カードかを判定し、ライフとミスを返す。 */
+/** カードIDを数字の大小順に並べ、同値なら元の配布順を保つ。 */
+export function sortCardIdsByValue(cards: Card[], direction: SortDirection): string[] {
+  return cards
+    .map((card, index) => ({ card, index }))
+    .sort((left, right) => {
+      const valueDiff =
+        direction === 'ascending'
+          ? left.card.value - right.card.value
+          : right.card.value - left.card.value
+      return valueDiff === 0 ? left.index - right.index : valueDiff
+    })
+    .map(({ card }) => card.id)
+}
+
+/** 選択カードが期待順の現在位置にあるかを判定し、ライフとミスを返す。 */
 export function judgeNextCard(
   cards: Card[],
   openedCardIds: string[],
   selectedCardId: string,
   currentLives: number,
+  expectedCardIds?: string[],
 ): JudgeResult {
   const selectedCard = cards.find((card) => card.id === selectedCardId)
   if (!selectedCard) {
@@ -74,8 +91,11 @@ export function judgeNextCard(
     throw new Error(`すでにオープン済みのカードです: ${selectedCard.id}`)
   }
 
+  const expectedCardId = expectedCardIds?.[openedCardIds.length]
   const smallestUnopenedValue = Math.min(...unopenedCards.map((card) => card.value))
-  const isCorrect = selectedCard.value === smallestUnopenedValue
+  const isCorrect = expectedCardId
+    ? selectedCard.id === expectedCardId
+    : selectedCard.value === smallestUnopenedValue
   const remainingLives = isCorrect ? currentLives : Math.max(0, currentLives - 1)
 
   return {

@@ -1,5 +1,5 @@
 import type { Card, Player, Topic } from '../domain/types'
-import { calculateLives, dealCards, judgeNextCard, normalizePlayers, summarizeRound } from '../domain/game'
+import { calculateLives, dealCards, judgeNextCard, normalizePlayers, sortCardIdsByValue, summarizeRound } from '../domain/game'
 import { builtInTopics, pickTopic } from '../domain/topics'
 
 export type Screen = 'home' | 'setup' | 'reveal' | 'topic' | 'sort' | 'open' | 'result' | 'topics' | 'howToPlay'
@@ -28,6 +28,7 @@ export type AppAction =
   | { type: 'go'; screen: Screen }
   | { type: 'startRound'; playerNames: string[]; cardValues: number[]; topicRandomValue?: number; topics?: Topic[] }
   | { type: 'setSortedCardIds'; cardIds: string[] }
+  | { type: 'setTopic'; topic: Topic }
   | { type: 'openCard'; cardId: string }
   | { type: 'finishRound' }
   | { type: 'setNotice'; message: string }
@@ -108,6 +109,18 @@ export function reducer(state: AppState, action: AppAction): AppState {
         },
       }
     }
+    case 'setTopic': {
+      if (!state.round) {
+        return state
+      }
+      return {
+        ...state,
+        round: {
+          ...state.round,
+          topic: action.topic,
+        },
+      }
+    }
     case 'openCard': {
       if (!state.round || state.round.openedCardIds.includes(action.cardId)) {
         return state
@@ -118,6 +131,7 @@ export function reducer(state: AppState, action: AppAction): AppState {
           state.round.openedCardIds,
           action.cardId,
           state.round.lives,
+          sortCardIdsByValue(state.round.cards, 'descending'),
         )
         return {
           ...state,

@@ -32,7 +32,7 @@ export function ResultScreen({
 
   return (
     <CardSurface>
-      <ScreenHeader eyebrow="ふりかえり" title={success ? '成功' : '失敗'} description={`セッション成績: ${successCount} / ${playCount}`} />
+      <ScreenHeader eyebrow="ふりかえり" title={success ? '成功' : '失敗'} description={`高い順の正解位置と違うカードがミスです。セッション成績: ${successCount} / ${playCount}`} />
       <div className="grid gap-3">
         {openedCardIds.map((cardId, index) => {
           const card = cards.find((candidate) => candidate.id === cardId)!
@@ -41,7 +41,7 @@ export function ResultScreen({
             <div key={cardId} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-[#c79b57] bg-[#fffaf0] p-3 shadow-[0_6px_14px_rgba(61,38,15,0.1)]">
               <span className="font-black">{index + 1}</span>
               <span>{formatCardLabel(cards, players, card)}</span>
-              <span className={wasMistake ? 'font-black text-[#b94a34]' : 'font-black'}>{card.value}</span>
+              <span className={wasMistake ? 'font-black text-[#b94a34]' : 'font-black'}>{card.value}{wasMistake ? ' ミス' : ''}</span>
             </div>
           )
         })}

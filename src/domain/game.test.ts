@@ -5,6 +5,7 @@ import {
   judgeNextCard,
   normalizePlayers,
   summarizeRound,
+  sortCardIdsByValue,
 } from './game'
 
 describe('normalizePlayers', () => {
@@ -108,6 +109,49 @@ describe('judgeNextCard', () => {
       isCorrect: true,
       remainingLives: 1,
       mistakeCardIds: [],
+    })
+  })
+})
+
+describe('sortCardIdsByValue', () => {
+  const cards = [
+    { id: 'card-1', ownerId: 'player-1', value: 30 },
+    { id: 'card-2', ownerId: 'player-2', value: 90 },
+    { id: 'card-3', ownerId: 'player-3', value: 60 },
+  ]
+
+  it('orders cards from high to low for the consultation phase', () => {
+    expect(sortCardIdsByValue(cards, 'descending')).toEqual(['card-2', 'card-3', 'card-1'])
+  })
+
+  it('orders cards from low to high when explicitly requested', () => {
+    expect(sortCardIdsByValue(cards, 'ascending')).toEqual(['card-1', 'card-3', 'card-2'])
+  })
+})
+
+describe('judgeNextCard with a fixed expected order', () => {
+  const cards = [
+    { id: 'card-1', ownerId: 'player-1', value: 90 },
+    { id: 'card-2', ownerId: 'player-2', value: 80 },
+    { id: 'card-3', ownerId: 'player-3', value: 70 },
+  ]
+  const expectedOrder = ['card-1', 'card-2', 'card-3']
+
+  it('marks the card at the current position in the high-to-low order as correct', () => {
+    expect(judgeNextCard(cards, [], 'card-1', 1, expectedOrder)).toEqual({
+      card: cards[0],
+      isCorrect: true,
+      remainingLives: 1,
+      mistakeCardIds: [],
+    })
+  })
+
+  it('keeps a swapped card wrong even if it becomes the highest unopened card later', () => {
+    expect(judgeNextCard(cards, ['card-2'], 'card-1', 2, expectedOrder)).toEqual({
+      card: cards[0],
+      isCorrect: false,
+      remainingLives: 1,
+      mistakeCardIds: ['card-1'],
     })
   })
 })

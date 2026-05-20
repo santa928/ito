@@ -34,6 +34,20 @@ describe('appState reducer', () => {
     expect(opened.screen).toBe('open')
   })
 
+  it('judges the opened cards against the high-to-low card order', () => {
+    const started = reducer(createInitialState(), {
+      type: 'startRound',
+      playerNames: ['A', 'B'],
+      cardValues: [90, 80, 70, 60],
+      topicRandomValue: 0,
+    })
+
+    const opened = reducer(started, { type: 'openCard', cardId: 'card-1' })
+
+    expect(opened.round?.lives).toBe(1)
+    expect(opened.round?.mistakeCardIds).toEqual([])
+  })
+
   it('does not finish a round before all cards are opened', () => {
     const started = reducer(createInitialState(), {
       type: 'startRound',
@@ -107,6 +121,29 @@ describe('appState reducer', () => {
     expect(reopened.round?.openedCardIds).toEqual(['card-1'])
   })
 
+  it('updates the current topic without restarting the round', () => {
+    const started = reducer(createInitialState(), {
+      type: 'startRound',
+      playerNames: ['A', 'B'],
+      cardValues: [10, 20, 30, 40],
+      topicRandomValue: 0,
+    })
+
+    const rerolled = reducer(started, {
+      type: 'setTopic',
+      topic: {
+        id: 'custom-topic',
+        text: '新しいお題',
+        category: 'everyone',
+        isBuiltin: false,
+      },
+    })
+
+    expect(rerolled.round?.topic.text).toBe('新しいお題')
+    expect(rerolled.round?.cards).toEqual(started.round?.cards)
+    expect(rerolled.screen).toBe('reveal')
+  })
+
   it('does not throw and keeps the previous screen when topic random value is invalid', () => {
     const previous = reducer(createInitialState(), { type: 'go', screen: 'setup' })
 
@@ -146,6 +183,6 @@ describe('appState reducer', () => {
 
     expect(finished.screen).toBe('result')
     expect(finished.session.playCount).toBe(1)
-    expect(finished.session.successCount).toBe(1)
+    expect(finished.session.successCount).toBe(0)
   })
 })
