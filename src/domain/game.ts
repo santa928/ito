@@ -1,4 +1,4 @@
-import type { Card, JudgeResult, OpenedCard, Player, RoundResult } from './types'
+import type { Card, JudgeResult, Player } from './types'
 
 export type SortDirection = 'ascending' | 'descending'
 
@@ -44,17 +44,6 @@ export function dealCards(players: Player[], values: number[]): Card[] {
   )
 }
 
-/** カード総数からミスを許容するライフ数を計算する。 */
-export function calculateLives(cardCount: number): number {
-  if (cardCount <= 4) {
-    return 1
-  }
-  if (cardCount <= 6) {
-    return 2
-  }
-  return 3
-}
-
 /** カードIDを数字の大小順に並べ、同値なら元の配布順を保つ。 */
 export function sortCardIdsByValue(cards: Card[], direction: SortDirection): string[] {
   return cards
@@ -69,12 +58,11 @@ export function sortCardIdsByValue(cards: Card[], direction: SortDirection): str
     .map(({ card }) => card.id)
 }
 
-/** 選択カードが期待順の現在位置にあるかを判定し、ライフとミスを返す。 */
+/** 選択カードが期待順の現在位置にあるかを判定し、ミス情報を返す。 */
 export function judgeNextCard(
   cards: Card[],
   openedCardIds: string[],
   selectedCardId: string,
-  currentLives: number,
   expectedCardIds?: string[],
 ): JudgeResult {
   const selectedCard = cards.find((card) => card.id === selectedCardId)
@@ -96,40 +84,10 @@ export function judgeNextCard(
   const isCorrect = expectedCardId
     ? selectedCard.id === expectedCardId
     : selectedCard.value === smallestUnopenedValue
-  const remainingLives = isCorrect ? currentLives : Math.max(0, currentLives - 1)
 
   return {
     card: selectedCard,
     isCorrect,
-    remainingLives,
     mistakeCardIds: isCorrect ? [] : [selectedCard.id],
-  }
-}
-
-/** 開いた順序とミス情報からラウンド結果を作る。 */
-export function summarizeRound(
-  cards: Card[],
-  openedCardIds: string[],
-  mistakeCardIds: string[],
-  remainingLives: number,
-): RoundResult {
-  const mistakes = new Set(mistakeCardIds)
-  const openedCards: OpenedCard[] = openedCardIds.map((cardId, index) => {
-    const card = cards.find((candidate) => candidate.id === cardId)
-    if (!card) {
-      throw new Error(`オープン済みカードが見つかりません: ${cardId}`)
-    }
-    return {
-      ...card,
-      openedAt: index + 1,
-      wasMistake: mistakes.has(card.id),
-    }
-  })
-
-  return {
-    success: remainingLives > 0,
-    openedCards,
-    mistakeCardIds,
-    remainingLives,
   }
 }

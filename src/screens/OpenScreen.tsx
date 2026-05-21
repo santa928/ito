@@ -10,19 +10,17 @@ type OpenScreenProps = {
   sortedCardIds: string[]
   openedCardIds: string[]
   mistakeCardIds: string[]
-  lives: number
   onOpen: (cardId: string) => void
   onFinish: () => void
 }
 
-/** 並べた順にカードを1枚ずつ開き、ミスとライフを見せる画面。 */
+/** 並べた順にカードを1枚ずつ開き、順番違いのミスを見せる画面。 */
 export function OpenScreen({
   cards,
   players,
   sortedCardIds,
   openedCardIds,
   mistakeCardIds,
-  lives,
   onOpen,
   onFinish,
 }: OpenScreenProps) {
@@ -31,7 +29,7 @@ export function OpenScreen({
 
   return (
     <CardSurface>
-      <ScreenHeader eyebrow={`残りライフ ${lives}`} title="1枚ずつオープン" description="高い順だと思う並びでカードを開きます。" />
+      <ScreenHeader eyebrow="オープン" title="1枚ずつオープン" description="高い順だと思う並びでカードを開きます。" />
       <div className="grid gap-3">
         {sortedCardIds.map((cardId, index) => {
           const card = cards.find((candidate) => candidate.id === cardId)!

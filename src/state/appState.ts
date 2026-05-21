@@ -1,5 +1,5 @@
 import type { Card, Player, Topic } from '../domain/types'
-import { calculateLives, dealCards, judgeNextCard, normalizePlayers, sortCardIdsByValue, summarizeRound } from '../domain/game'
+import { dealCards, judgeNextCard, normalizePlayers, sortCardIdsByValue } from '../domain/game'
 import { builtInTopics, pickTopic } from '../domain/topics'
 
 export type Screen = 'home' | 'setup' | 'reveal' | 'topic' | 'sort' | 'open' | 'result' | 'topics' | 'howToPlay'
@@ -10,7 +10,6 @@ export type RoundState = {
   sortedCardIds: string[]
   openedCardIds: string[]
   mistakeCardIds: string[]
-  lives: number
   topic: Topic
 }
 
@@ -18,7 +17,6 @@ export type AppState = {
   screen: Screen
   round: RoundState | null
   session: {
-    successCount: number
     playCount: number
   }
   notice: string | null
@@ -55,7 +53,6 @@ export function createInitialState(): AppState {
     screen: 'home',
     round: null,
     session: {
-      successCount: 0,
       playCount: 0,
     },
     notice: null,
@@ -80,7 +77,6 @@ export function reducer(state: AppState, action: AppAction): AppState {
             sortedCardIds: cards.map((card) => card.id),
             openedCardIds: [],
             mistakeCardIds: [],
-            lives: calculateLives(cards.length),
             topic: pickTopic(action.topics ?? builtInTopics, action.topicRandomValue),
           },
         }
@@ -130,7 +126,6 @@ export function reducer(state: AppState, action: AppAction): AppState {
           state.round.cards,
           state.round.openedCardIds,
           action.cardId,
-          state.round.lives,
           sortCardIdsByValue(state.round.cards, 'descending'),
         )
         return {
@@ -140,7 +135,6 @@ export function reducer(state: AppState, action: AppAction): AppState {
             ...state.round,
             openedCardIds: [...state.round.openedCardIds, action.cardId],
             mistakeCardIds: [...state.round.mistakeCardIds, ...result.mistakeCardIds],
-            lives: result.remainingLives,
           },
         }
       } catch {
@@ -160,18 +154,11 @@ export function reducer(state: AppState, action: AppAction): AppState {
           notice: 'すべてのカードを開いてください。',
         }
       }
-      const result = summarizeRound(
-        state.round.cards,
-        state.round.openedCardIds,
-        state.round.mistakeCardIds,
-        state.round.lives,
-      )
       return {
         ...state,
         screen: 'result',
         session: {
           playCount: state.session.playCount + 1,
-          successCount: state.session.successCount + (result.success ? 1 : 0),
         },
       }
     }

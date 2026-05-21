@@ -130,7 +130,6 @@ export function App() {
           sortedCardIds={round.sortedCardIds}
           openedCardIds={round.openedCardIds}
           mistakeCardIds={round.mistakeCardIds}
-          lives={round.lives}
           onOpen={(cardId) => dispatch({ type: 'openCard', cardId })}
           onFinish={() => dispatch({ type: 'finishRound' })}
         />
@@ -141,8 +140,6 @@ export function App() {
           players={round.players}
           openedCardIds={round.openedCardIds}
           mistakeCardIds={round.mistakeCardIds}
-          lives={round.lives}
-          successCount={state.session.successCount}
           playCount={state.session.playCount}
           onAgain={() => startRound(round.players.map((player) => player.name))}
           onHome={() => dispatch({ type: 'go', screen: 'home' })}

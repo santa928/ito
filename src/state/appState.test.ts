@@ -17,7 +17,7 @@ describe('appState reducer', () => {
     expect(state.screen).toBe('reveal')
     expect(state.round?.players.map((player) => player.name)).toEqual(['みほ', 'ゆうと'])
     expect(state.round?.cards).toHaveLength(4)
-    expect(state.round?.lives).toBe(1)
+    expect(state.round).not.toHaveProperty('lives')
   })
 
   it('records a mistake and keeps the round going', () => {
@@ -29,7 +29,6 @@ describe('appState reducer', () => {
     })
 
     const opened = reducer(started, { type: 'openCard', cardId: 'card-1' })
-    expect(opened.round?.lives).toBe(0)
     expect(opened.round?.mistakeCardIds).toEqual(['card-1'])
     expect(opened.screen).toBe('open')
   })
@@ -44,7 +43,6 @@ describe('appState reducer', () => {
 
     const opened = reducer(started, { type: 'openCard', cardId: 'card-1' })
 
-    expect(opened.round?.lives).toBe(1)
     expect(opened.round?.mistakeCardIds).toEqual([])
   })
 
@@ -183,6 +181,6 @@ describe('appState reducer', () => {
 
     expect(finished.screen).toBe('result')
     expect(finished.session.playCount).toBe(1)
-    expect(finished.session.successCount).toBe(0)
+    expect(finished.session).not.toHaveProperty('successCount')
   })
 })

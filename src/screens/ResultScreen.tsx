@@ -9,8 +9,6 @@ type ResultScreenProps = {
   players: Player[]
   openedCardIds: string[]
   mistakeCardIds: string[]
-  lives: number
-  successCount: number
   playCount: number
   onAgain: () => void
   onHome: () => void
@@ -22,17 +20,13 @@ export function ResultScreen({
   players,
   openedCardIds,
   mistakeCardIds,
-  lives,
-  successCount,
   playCount,
   onAgain,
   onHome,
 }: ResultScreenProps) {
-  const success = lives > 0
-
   return (
     <CardSurface>
-      <ScreenHeader eyebrow="ふりかえり" title={success ? '成功' : '失敗'} description={`高い順の正解位置と違うカードがミスです。セッション成績: ${successCount} / ${playCount}`} />
+      <ScreenHeader eyebrow="ふりかえり" title="数字とミスを確認" description={`高い順の正解位置と違うカードがミスです。今回までのプレイ回数: ${playCount}`} />
       <div className="grid gap-3">
         {openedCardIds.map((cardId, index) => {
           const card = cards.find((candidate) => candidate.id === cardId)!

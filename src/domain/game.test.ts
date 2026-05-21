@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
-  calculateLives,
   dealCards,
   judgeNextCard,
   normalizePlayers,
-  summarizeRound,
   sortCardIdsByValue,
 } from './game'
 
@@ -46,20 +44,6 @@ describe('dealCards', () => {
   })
 })
 
-describe('calculateLives', () => {
-  it('returns 1 life for four or fewer cards', () => {
-    expect(calculateLives(4)).toBe(1)
-  })
-
-  it('returns 2 lives for five or six cards', () => {
-    expect(calculateLives(6)).toBe(2)
-  })
-
-  it('returns 3 lives for seven or more cards', () => {
-    expect(calculateLives(7)).toBe(3)
-  })
-})
-
 describe('judgeNextCard', () => {
   const cards = [
     { id: 'card-1', ownerId: 'player-1', value: 20 },
@@ -68,31 +52,29 @@ describe('judgeNextCard', () => {
   ]
 
   it('marks the smallest unopened card as correct', () => {
-    expect(judgeNextCard(cards, [], 'card-2', 1)).toEqual({
+    expect(judgeNextCard(cards, [], 'card-2')).toEqual({
       card: cards[1],
       isCorrect: true,
-      remainingLives: 1,
       mistakeCardIds: [],
     })
   })
 
-  it('decreases life and records a mistake when opening a larger card early', () => {
-    expect(judgeNextCard(cards, [], 'card-1', 1)).toEqual({
+  it('records a mistake when opening a larger card early', () => {
+    expect(judgeNextCard(cards, [], 'card-1')).toEqual({
       card: cards[0],
       isCorrect: false,
-      remainingLives: 0,
       mistakeCardIds: ['card-1'],
     })
   })
 
   it('throws when selected card is already opened', () => {
-    expect(() => judgeNextCard(cards, ['card-2'], 'card-2', 1)).toThrow(
+    expect(() => judgeNextCard(cards, ['card-2'], 'card-2')).toThrow(
       'すでにオープン済みのカードです',
     )
   })
 
   it('throws when all cards are already opened', () => {
-    expect(() => judgeNextCard(cards, ['card-1', 'card-2', 'card-3'], 'card-2', 1)).toThrow(
+    expect(() => judgeNextCard(cards, ['card-1', 'card-2', 'card-3'], 'card-2')).toThrow(
       'オープンできるカードがありません',
     )
   })
@@ -104,10 +86,9 @@ describe('judgeNextCard', () => {
       { id: 'card-3', ownerId: 'player-3', value: 30 },
     ]
 
-    expect(judgeNextCard(duplicateValueCards, [], 'card-2', 1)).toEqual({
+    expect(judgeNextCard(duplicateValueCards, [], 'card-2')).toEqual({
       card: duplicateValueCards[1],
       isCorrect: true,
-      remainingLives: 1,
       mistakeCardIds: [],
     })
   })
@@ -138,38 +119,18 @@ describe('judgeNextCard with a fixed expected order', () => {
   const expectedOrder = ['card-1', 'card-2', 'card-3']
 
   it('marks the card at the current position in the high-to-low order as correct', () => {
-    expect(judgeNextCard(cards, [], 'card-1', 1, expectedOrder)).toEqual({
+    expect(judgeNextCard(cards, [], 'card-1', expectedOrder)).toEqual({
       card: cards[0],
       isCorrect: true,
-      remainingLives: 1,
       mistakeCardIds: [],
     })
   })
 
   it('keeps a swapped card wrong even if it becomes the highest unopened card later', () => {
-    expect(judgeNextCard(cards, ['card-2'], 'card-1', 2, expectedOrder)).toEqual({
+    expect(judgeNextCard(cards, ['card-2'], 'card-1', expectedOrder)).toEqual({
       card: cards[0],
       isCorrect: false,
-      remainingLives: 1,
       mistakeCardIds: ['card-1'],
-    })
-  })
-})
-
-describe('summarizeRound', () => {
-  it('returns success when at least one life remains', () => {
-    const cards = [
-      { id: 'card-1', ownerId: 'player-1', value: 10 },
-      { id: 'card-2', ownerId: 'player-2', value: 20 },
-    ]
-    expect(summarizeRound(cards, ['card-1', 'card-2'], ['card-2'], 1)).toEqual({
-      success: true,
-      remainingLives: 1,
-      mistakeCardIds: ['card-2'],
-      openedCards: [
-        { id: 'card-1', ownerId: 'player-1', value: 10, openedAt: 1, wasMistake: false },
-        { id: 'card-2', ownerId: 'player-2', value: 20, openedAt: 2, wasMistake: true },
-      ],
     })
   })
 })
