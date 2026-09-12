@@ -10,10 +10,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['pwa-192x192.svg', 'pwa-512x512.svg'],
       devOptions: {
-        enabled: true,
+        enabled: false,
       },
       manifest: {
         name: '価値観カード',

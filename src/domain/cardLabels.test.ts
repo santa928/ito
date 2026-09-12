@@ -15,6 +15,13 @@ describe('cardOrdinalForOwner', () => {
 })
 
 describe('formatCardLabel', () => {
+  it('distinguishes identical names without changing the names', () => {
+    const players = normalizePlayers(['あき', 'あき'])
+    const cards = dealCards(players, [10, 20, 30, 40])
+    expect(formatCardLabel(cards, players, cards[0])).toBe('あき（1番） の1枚目')
+    expect(formatCardLabel(cards, players, cards[2])).toBe('あき（2番） の1枚目')
+    expect(players.map((player) => player.name)).toEqual(['あき', 'あき'])
+  })
   it('adds an ordinal when a player has multiple cards', () => {
     const players = normalizePlayers(['みほ', 'ゆうと'])
     const cards = dealCards(players, [12, 44, 7, 80])

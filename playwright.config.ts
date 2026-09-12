@@ -3,13 +3,15 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './tests/e2e',
   workers: 1,
+  timeout: 60_000,
   webServer: {
-    command: 'npm run dev',
-    url: 'http://127.0.0.1:5173',
+    // npm run buildで作った本番成果物を使い、HMRによるラウンド再初期化を避ける。
+    command: 'npm run preview -- --port 4173',
+    url: 'http://127.0.0.1:4173',
     reuseExistingServer: true,
   },
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: 'http://127.0.0.1:4173',
     trace: 'on-first-retry',
   },
   projects: [
@@ -21,10 +23,10 @@ export default defineConfig({
       },
     },
     {
-      name: 'mobile-430',
+      name: 'chromium-mobile',
       use: {
-        ...devices['iPhone 14 Pro Max'],
-        viewport: { width: 430, height: 932 },
+        ...devices['Pixel 7'],
+        viewport: { width: 390, height: 844 },
       },
     },
   ],

@@ -19,6 +19,7 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
   const rowRefs = useRef(new Map<string, HTMLDivElement>())
 
+  /** 指定カードだけを隣の順位へ移動する。境界では変更しない。 */
   function move(cardId: string, direction: -1 | 1) {
     const index = sortedCardIds.indexOf(cardId)
     const nextIndex = index + direction
@@ -31,6 +32,7 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
     onChange(next)
   }
 
+  /** 伏せたままのカードをドラッグ先の前後へ挿入する。 */
   function moveNear(sourceCardId: string, targetCardId: string, placeAfterTarget: boolean) {
     const from = sortedCardIds.indexOf(sourceCardId)
     if (from < 0 || !sortedCardIds.includes(targetCardId) || sourceCardId === targetCardId) {
@@ -43,6 +45,7 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
     onChange(next)
   }
 
+  /** カード行の実寸を、ドラッグ中の挿入位置判定用に保持する。 */
   function setRowRef(cardId: string) {
     return (node: HTMLDivElement | null) => {
       if (node) {
@@ -53,19 +56,16 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
     }
   }
 
-  function startDrag(event: PointerEvent<HTMLDivElement>, cardId: string) {
-    if (event.pointerType === 'mouse' && event.button !== 0) {
-      return
-    }
-    if ((event.target as HTMLElement).closest('button')) {
-      return
-    }
+  /** 専用ハンドルだけを捕捉し、本文からの縦スクロールを妨げない。 */
+  function startDrag(event: PointerEvent<HTMLButtonElement>, cardId: string) {
+    if (event.button !== 0 || event.isPrimary === false || event.ctrlKey) return
     event.preventDefault()
     event.currentTarget.setPointerCapture(event.pointerId)
     setDraggingCardId(cardId)
   }
 
-  function dragMove(event: PointerEvent<HTMLDivElement>) {
+  /** カーソル下にある行の実測境界から、カードの挿入位置を決める。 */
+  function dragMove(event: PointerEvent<HTMLButtonElement>) {
     if (!draggingCardId) {
       return
     }
@@ -82,34 +82,38 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
 
   return (
     <CardSurface>
-      <ScreenHeader eyebrow="相談" title="高い順に並べる" description="カードを押したまま動かせます。細かい調整は上下ボタンでもできます。" />
+      <ScreenHeader eyebrow="相談" title="高い順に並べる" description="高い順（100→1）です。左の↕を押したまま動かすか、上下ボタンで並べます。名前の上ではスクロールできます。" />
       <div className="grid gap-3">
         {sortedCardIds.map((cardId, index) => {
           const card = cards.find((candidate) => candidate.id === cardId)!
+          const label = formatCardLabel(cards, players, card)
           return (
             <div
               key={cardId}
               ref={setRowRef(cardId)}
               data-testid="sort-card-row"
-              className={`grid touch-none select-none grid-cols-[auto_1fr_auto_auto] items-center gap-2 rounded-2xl border border-[#c79b57] bg-[#fffaf0] p-3 shadow-[0_6px_14px_rgba(61,38,15,0.1)] ${draggingCardId === cardId ? 'scale-[0.99] opacity-80' : ''}`}
-              onPointerDown={(event) => startDrag(event, cardId)}
-              onPointerMove={dragMove}
-              onPointerUp={() => setDraggingCardId(null)}
-              onPointerCancel={() => setDraggingCardId(null)}
+              className={`grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2 rounded-2xl border border-[#c79b57] bg-[#fffaf0] p-3 shadow-[0_6px_14px_rgba(61,38,15,0.1)] ${draggingCardId === cardId ? 'opacity-80' : ''}`}
             >
-              <div className="grid h-10 w-8 place-items-center rounded-xl bg-[#f3dfba] text-lg font-black text-[#806344]" aria-hidden="true">
+              <button
+                type="button"
+                aria-label={`${label}をドラッグ`}
+                className="h-11 w-11 touch-none select-none rounded-xl bg-[#f3dfba] text-lg font-black text-[#806344]"
+                onPointerDown={(event) => startDrag(event, cardId)}
+                onPointerMove={dragMove}
+                onPointerUp={() => setDraggingCardId(null)}
+                onPointerCancel={() => setDraggingCardId(null)}
+                onLostPointerCapture={() => setDraggingCardId(null)}
+              >
                 ↕
-              </div>
-              <div>
+              </button>
+              <div className="min-w-0">
                 <p className="text-xs font-bold text-[#806344]">{index + 1}番目に高い</p>
-                <p className="font-bold">{formatCardLabel(cards, players, card)}</p>
+                <p className="break-anywhere font-bold">{label}</p>
               </div>
-              <button className="h-10 w-10 rounded-xl border border-[#ead19d] bg-[#fff1cf] font-black shadow-[0_3px_0_#d4af70]" onClick={() => move(cardId, -1)} aria-label="上へ">
-                ↑
-              </button>
-              <button className="h-10 w-10 rounded-xl border border-[#ead19d] bg-[#fff1cf] font-black shadow-[0_3px_0_#d4af70]" onClick={() => move(cardId, 1)} aria-label="下へ">
-                ↓
-              </button>
+              <div className="grid gap-2">
+                <button disabled={index === 0} className="h-11 w-11 rounded-xl border border-[#ead19d] bg-[#fff1cf] font-black shadow-[0_3px_0_#d4af70] disabled:opacity-35" onClick={() => move(cardId, -1)} aria-label={`${label}を上へ`}>↑</button>
+                <button disabled={index === sortedCardIds.length - 1} className="h-11 w-11 rounded-xl border border-[#ead19d] bg-[#fff1cf] font-black shadow-[0_3px_0_#d4af70] disabled:opacity-35" onClick={() => move(cardId, 1)} aria-label={`${label}を下へ`}>↓</button>
+              </div>
             </div>
           )
         })}

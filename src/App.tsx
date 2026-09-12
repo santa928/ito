@@ -2,7 +2,9 @@ import { useMemo, useReducer, useState } from 'react'
 import { Layout } from './components/Layout'
 import { PrimaryButton } from './components/PrimaryButton'
 import { RoundControls } from './components/RoundControls'
+import { UpdatePrompt } from './components/UpdatePrompt'
 import { getEnabledTopics, pickTopic } from './domain/topics'
+import { cardsPerPlayer, createCardValues, limitPlayerName } from './domain/game'
 import type { Topic } from './domain/types'
 import { HomeScreen } from './screens/HomeScreen'
 import { HowToPlayScreen } from './screens/HowToPlayScreen'
@@ -14,15 +16,7 @@ import { SortScreen } from './screens/SortScreen'
 import { TopicScreen } from './screens/TopicScreen'
 import { TopicsScreen } from './screens/TopicsScreen'
 import { createInitialState, reducer } from './state/appState'
-import { defaultSettings, loadSettings, saveSettings } from './storage/settings'
-
-function createCardValues(count: number): number[] {
-  const values = new Set<number>()
-  while (values.size < count) {
-    values.add(Math.floor(Math.random() * 100) + 1)
-  }
-  return [...values]
-}
+import { loadSettings, loadSettingsWithNotice, saveSettings } from './storage/settings'
 
 /** 現在の設定から、このラウンドで使えるお題候補を作る。 */
 function getPlayableTopics(settings: ReturnType<typeof loadSettings>): Topic[] {
@@ -35,35 +29,55 @@ function getPlayableTopics(settings: ReturnType<typeof loadSettings>): Topic[] {
 
 /** アプリの画面状態をreducerに接続し、ゲーム全体の進行を描画する。 */
 export function App() {
-  const [state, dispatch] = useReducer(reducer, undefined, createInitialState)
-  const [settings, setSettings] = useState(() => {
-    try {
-      return loadSettings()
-    } catch {
-      return defaultSettings
-    }
-  })
+  const [loaded] = useState(loadSettingsWithNotice)
+  const [state, dispatch] = useReducer(reducer, loaded.notice, (notice) => ({ ...createInitialState(), notice }))
+  const [settings, setSettings] = useState(loaded.settings)
+  const [needsExplicitSave, setNeedsExplicitSave] = useState(Boolean(loaded.notice))
+  const [hasUnsavedSettings, setHasUnsavedSettings] = useState(Boolean(loaded.notice))
   const lastNames = useMemo(() => settings.lastPlayerNames, [settings.lastPlayerNames])
+  const [setupNames, setSetupNames] = useState<string[] | null>(null)
+  const [settingsReturnScreen, setSettingsReturnScreen] = useState<'home' | 'setup'>('home')
+  const playableTopics = useMemo(() => getPlayableTopics(settings), [settings])
   const round = state.round
+  const rerollDisabledReason = round && round.openedCardIds.length > 0
+    ? 'カードを開いた後は、お題を変更できません。'
+    : playableTopics.length < 2 ? '再抽選するには、お題を2件以上ONにしてください。' : null
 
+  /** 配布前に人数を検査し、保存に失敗しても今回のゲームは続ける。 */
   function startRound(names: string[]) {
-    const cardCount = names.length * (names.length <= 3 ? 2 : 1)
-    const nextSettings = { ...settings, lastPlayerNames: names }
-    const saveResult = saveSettings(nextSettings)
+    if (playableTopics.length === 0) {
+      dispatch({ type: 'setNotice', message: 'お題が0件です。お題管理でカテゴリとお題を1件以上ONにしてください。' })
+      return
+    }
+    let cardValues: number[]
+    let normalizedNames: string[]
+    try {
+      if (!Array.isArray(names) || names.some((name) => typeof name !== 'string')) throw new Error('名前が不正です')
+      normalizedNames = names.map((name) => limitPlayerName(name.trim()))
+      cardValues = createCardValues(names.length * cardsPerPlayer(names.length))
+    } catch {
+      dispatch({ type: 'setNotice', message: '人数を2〜8人にして、もう一度開始してください。' })
+      return
+    }
+    const nextSettings = { ...settings, lastPlayerNames: normalizedNames }
+    // 修復対象の元データは、お題管理で明示保存するまで開始操作でも上書きしない。
+    const saveResult = needsExplicitSave ? null : saveSettings(nextSettings)
+    setHasUnsavedSettings(needsExplicitSave || !saveResult?.ok)
     setSettings(nextSettings)
-    if (!saveResult.ok) {
+    if (saveResult && !saveResult.ok) {
       dispatch({ type: 'setNotice', message: saveResult.message })
     }
     dispatch({
       type: 'startRound',
-      playerNames: names,
-      cardValues: createCardValues(cardCount),
+      playerNames: normalizedNames,
+      cardValues,
       topics: getPlayableTopics(nextSettings),
     })
   }
 
+  /** 開封前で別の候補があるときだけ、現在のお題を除いて抽選する。 */
   function rerollTopic() {
-    if (!round) {
+    if (!round || rerollDisabledReason) {
       return
     }
     const topics = getPlayableTopics(settings)
@@ -79,8 +93,9 @@ export function App() {
 
   return (
     <Layout>
+      {state.screen === 'home' ? <UpdatePrompt hasUnsavedSettings={hasUnsavedSettings} /> : null}
       {state.notice ? (
-        <div className="mb-3 rounded-xl border border-[#d8b77a] bg-[#fff4d9] p-3 text-sm font-bold text-[#5a4631]">
+        <div role="status" className="mb-3 rounded-xl border border-[#d8b77a] bg-[#fff4d9] p-3 text-sm font-bold text-[#5a4631]">
           <div className="flex items-center justify-between gap-3">
             <span>{state.notice}</span>
             <PrimaryButton className="min-h-9 px-3 py-1 text-sm" variant="secondary" onClick={() => dispatch({ type: 'clearNotice' })}>
@@ -91,28 +106,40 @@ export function App() {
       ) : null}
       {showRoundControls ? (
         <RoundControls
+          key={state.screen}
           topic={round.topic}
           players={round.players}
           cards={round.cards}
-          onHome={() => dispatch({ type: 'go', screen: 'home' })}
+          rerollDisabledReason={rerollDisabledReason}
+          onHome={() => dispatch({ type: 'endRound' })}
           onRerollTopic={rerollTopic}
         />
       ) : null}
       {state.screen === 'home' ? (
         <HomeScreen
-          onPlay={() => dispatch({ type: 'go', screen: 'setup' })}
-          onTopics={() => dispatch({ type: 'go', screen: 'topics' })}
+          onPlay={() => { setSetupNames(null); dispatch({ type: 'go', screen: 'setup' }) }}
+          onTopics={() => { setSettingsReturnScreen('home'); dispatch({ type: 'go', screen: 'topics' }) }}
           onHowToPlay={() => dispatch({ type: 'go', screen: 'howToPlay' })}
         />
       ) : null}
       {state.screen === 'setup' ? (
-        <SetupScreen initialNames={lastNames} onBack={() => dispatch({ type: 'go', screen: 'home' })} onStart={startRound} />
+        <SetupScreen
+          initialNames={setupNames ?? lastNames}
+          playableTopicCount={playableTopics.length}
+          onBack={() => dispatch({ type: 'go', screen: 'home' })}
+          onStart={startRound}
+          onTopics={(names) => {
+            setSetupNames(names)
+            setSettingsReturnScreen('setup')
+            dispatch({ type: 'go', screen: 'topics' })
+          }}
+        />
       ) : null}
       {state.screen === 'reveal' && round ? (
         <RevealScreen players={round.players} cards={round.cards} onComplete={() => dispatch({ type: 'go', screen: 'topic' })} />
       ) : null}
       {state.screen === 'topic' && round ? (
-        <TopicScreen topic={round.topic} onReroll={rerollTopic} onNext={() => dispatch({ type: 'go', screen: 'sort' })} />
+        <TopicScreen topic={round.topic} rerollDisabledReason={rerollDisabledReason} onReroll={rerollTopic} onNext={() => dispatch({ type: 'go', screen: 'sort' })} />
       ) : null}
       {state.screen === 'sort' && round ? (
         <SortScreen
@@ -142,7 +169,7 @@ export function App() {
           mistakeCardIds={round.mistakeCardIds}
           playCount={state.session.playCount}
           onAgain={() => startRound(round.players.map((player) => player.name))}
-          onHome={() => dispatch({ type: 'go', screen: 'home' })}
+          onHome={() => dispatch({ type: 'endRound' })}
         />
       ) : null}
       {state.screen === 'howToPlay' ? <HowToPlayScreen onBack={() => dispatch({ type: 'go', screen: 'home' })} /> : null}
@@ -151,14 +178,15 @@ export function App() {
           settings={settings}
           onSave={(nextSettings) => {
             const saveResult = saveSettings(nextSettings)
+            if (saveResult.ok) setNeedsExplicitSave(false)
+            setHasUnsavedSettings(!saveResult.ok)
             setSettings(nextSettings)
             if (!saveResult.ok) {
               dispatch({ type: 'setNotice', message: saveResult.message })
-              return
             }
-            dispatch({ type: 'go', screen: 'home' })
+            dispatch({ type: 'go', screen: settingsReturnScreen })
           }}
-          onBack={() => dispatch({ type: 'go', screen: 'home' })}
+          onBack={() => dispatch({ type: 'go', screen: settingsReturnScreen })}
         />
       ) : null}
     </Layout>

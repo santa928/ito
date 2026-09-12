@@ -1,5 +1,5 @@
 import type { Card, Player, Topic } from '../domain/types'
-import { dealCards, judgeNextCard, normalizePlayers, sortCardIdsByValue } from '../domain/game'
+import { dealCards, judgeNextCard, normalizePlayers } from '../domain/game'
 import { builtInTopics, pickTopic } from '../domain/topics'
 
 export type Screen = 'home' | 'setup' | 'reveal' | 'topic' | 'sort' | 'open' | 'result' | 'topics' | 'howToPlay'
@@ -24,6 +24,7 @@ export type AppState = {
 
 export type AppAction =
   | { type: 'go'; screen: Screen }
+  | { type: 'endRound' }
   | { type: 'startRound'; playerNames: string[]; cardValues: number[]; topicRandomValue?: number; topics?: Topic[] }
   | { type: 'setSortedCardIds'; cardIds: string[] }
   | { type: 'setTopic'; topic: Topic }
@@ -62,9 +63,28 @@ export function createInitialState(): AppState {
 /** 画面遷移、ラウンド進行、セッション成績を更新する。 */
 export function reducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    case 'go':
-      return { ...state, screen: action.screen }
+    case 'go': {
+      const destinations: Record<Screen, Screen[]> = {
+        home: ['setup', 'topics', 'howToPlay'],
+        setup: ['home', 'topics'],
+        topics: ['home', 'setup'],
+        howToPlay: ['home'],
+        reveal: ['topic'],
+        topic: ['sort'],
+        sort: ['open'],
+        open: [],
+        result: [],
+      }
+      return destinations[state.screen].includes(action.screen) ? { ...state, screen: action.screen } : state
+    }
+    case 'endRound':
+      return { ...state, screen: 'home', round: null }
     case 'startRound': {
+      if (state.round && state.screen !== 'result') return state
+      const topics = action.topics ?? builtInTopics
+      if (topics.length === 0) {
+        return { ...state, notice: 'お題が0件です。お題管理でカテゴリとお題を1件以上ONにしてください。' }
+      }
       try {
         const players = normalizePlayers(action.playerNames)
         const cards = dealCards(players, action.cardValues)
@@ -77,7 +97,7 @@ export function reducer(state: AppState, action: AppAction): AppState {
             sortedCardIds: cards.map((card) => card.id),
             openedCardIds: [],
             mistakeCardIds: [],
-            topic: pickTopic(action.topics ?? builtInTopics, action.topicRandomValue),
+            topic: pickTopic(topics, action.topicRandomValue),
           },
         }
       } catch {
@@ -88,7 +108,7 @@ export function reducer(state: AppState, action: AppAction): AppState {
       }
     }
     case 'setSortedCardIds': {
-      if (!state.round) {
+      if (!state.round || state.screen !== 'sort') {
         return state
       }
       if (!hasSameCardIdSet(state.round.cards, action.cardIds)) {
@@ -106,7 +126,7 @@ export function reducer(state: AppState, action: AppAction): AppState {
       }
     }
     case 'setTopic': {
-      if (!state.round) {
+      if (!state.round || state.round.openedCardIds.length > 0 || !['reveal', 'topic', 'sort', 'open'].includes(state.screen)) {
         return state
       }
       return {
@@ -118,15 +138,17 @@ export function reducer(state: AppState, action: AppAction): AppState {
       }
     }
     case 'openCard': {
-      if (!state.round || state.round.openedCardIds.includes(action.cardId)) {
+      if (!state.round || state.screen !== 'open' || state.round.openedCardIds.includes(action.cardId)) {
         return state
+      }
+      if (state.round.sortedCardIds[state.round.openedCardIds.length] !== action.cardId) {
+        return { ...state, notice: 'カードをオープンできませんでした。次のカードから開いてください。' }
       }
       try {
         const result = judgeNextCard(
           state.round.cards,
           state.round.openedCardIds,
           action.cardId,
-          sortCardIdsByValue(state.round.cards, 'descending'),
         )
         return {
           ...state,
@@ -145,7 +167,7 @@ export function reducer(state: AppState, action: AppAction): AppState {
       }
     }
     case 'finishRound': {
-      if (!state.round) {
+      if (!state.round || state.screen !== 'open') {
         return state
       }
       if (state.round.openedCardIds.length !== state.round.cards.length) {
