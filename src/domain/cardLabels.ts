@@ -1,5 +1,12 @@
 import type { Card, Player } from './types'
 
+/** 同名でも参加順で本人を識別できる表示名を返す。保存された名前は変更しない。 */
+export function formatPlayerLabel(players: Player[], player: Player): string {
+  return players.filter((candidate) => candidate.name === player.name).length > 1
+    ? `${player.name}（${players.indexOf(player) + 1}番）`
+    : player.name
+}
+
 /** 同じ持ち主のカード群の中で、対象カードが何枚目かを1始まりで返す。 */
 export function cardOrdinalForOwner(cards: Card[], card: Card): number {
   const ownerCards = cards.filter((candidate) => candidate.ownerId === card.ownerId)
@@ -21,8 +28,8 @@ export function formatCardLabel(cards: Card[], players: Player[], card: Card): s
 
   const ownerCardCount = cards.filter((candidate) => candidate.ownerId === card.ownerId).length
   if (ownerCardCount <= 1) {
-    return `${owner.name} のカード`
+    return `${formatPlayerLabel(players, owner)} のカード`
   }
 
-  return `${owner.name} の${cardOrdinalForOwner(cards, card)}枚目`
+  return `${formatPlayerLabel(players, owner)} の${cardOrdinalForOwner(cards, card)}枚目`
 }

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { CardSurface } from '../components/CardSurface'
 import { PrimaryButton } from '../components/PrimaryButton'
 import { ScreenHeader } from '../components/ScreenHeader'
-import { builtInTopics } from '../domain/topics'
+import { builtInTopics, getEnabledTopics } from '../domain/topics'
 import type { Topic, TopicCategory } from '../domain/types'
 import type { AppSettings } from '../storage/settings'
 
@@ -30,6 +30,7 @@ export function TopicsScreen({ settings, onSave, onBack }: TopicsScreenProps) {
   const [editingCategory, setEditingCategory] = useState<TopicCategory>('everyone')
 
   const hiddenTopicIds = new Set(draft.hiddenTopicIds)
+  const enabledCount = getEnabledTopics({ ...draft, hiddenTopicIds }).length
 
   function toggleCategory(nextCategory: TopicCategory) {
     setDraft({
@@ -98,6 +99,10 @@ export function TopicsScreen({ settings, onSave, onBack }: TopicsScreenProps) {
   return (
     <CardSurface>
       <ScreenHeader eyebrow="お題管理" title="場に合うお題だけ使う" />
+      <p role="status" className="mb-4 rounded-xl border border-[#d8c3a0] bg-[#fffaf0] p-3 text-sm font-bold leading-6">
+        抽選対象{enabledCount}件
+        {enabledCount === 0 ? '。この設定は保存できますが、遊ぶにはカテゴリとお題を1件以上ONにしてください。' : ''}
+      </p>
 
       <section className="grid gap-3">
         <h2 className="text-sm font-black text-[#806344]">カテゴリ</h2>
@@ -116,12 +121,14 @@ export function TopicsScreen({ settings, onSave, onBack }: TopicsScreenProps) {
       <section className="mt-6 grid gap-3">
         <h2 className="text-sm font-black text-[#806344]">自作お題</h2>
         <input
+          aria-label="自作お題"
           className="min-h-12 rounded-xl border border-[#d8c3a0] bg-white px-3 text-base"
           value={text}
           onChange={(event) => setText(event.target.value)}
           placeholder="自作お題"
         />
         <select
+          aria-label="自作お題のカテゴリ"
           className="min-h-12 rounded-xl border border-[#d8c3a0] bg-white px-3 text-base"
           value={category}
           onChange={(event) => setCategory(event.target.value as TopicCategory)}
@@ -143,11 +150,13 @@ export function TopicsScreen({ settings, onSave, onBack }: TopicsScreenProps) {
               {isEditing ? (
                 <>
                   <input
+                    aria-label="お題の本文を編集"
                     className="min-h-11 rounded-lg border border-[#d8c3a0] px-3"
                     value={editingText}
                     onChange={(event) => setEditingText(event.target.value)}
                   />
                   <select
+                    aria-label="お題のカテゴリを編集"
                     className="min-h-11 rounded-lg border border-[#d8c3a0] px-3"
                     value={editingCategory}
                     onChange={(event) => setEditingCategory(event.target.value as TopicCategory)}
@@ -168,8 +177,8 @@ export function TopicsScreen({ settings, onSave, onBack }: TopicsScreenProps) {
               ) : (
                 <>
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-bold">{topic.text}</p>
+                    <div className="min-w-0">
+                      <p className="break-anywhere font-bold">{topic.text}</p>
                       <p className="text-xs font-bold text-[#806344]">{categoryLabels[topic.category]}</p>
                     </div>
                     <label className="text-sm font-bold">
@@ -197,7 +206,7 @@ export function TopicsScreen({ settings, onSave, onBack }: TopicsScreenProps) {
         <div className="max-h-72 overflow-auto rounded-xl border border-[#d8c3a0] bg-white">
           {builtInTopics.map((topic) => (
             <label key={topic.id} className="flex items-start justify-between gap-3 border-b border-[#f1dfc2] p-3 text-sm last:border-b-0">
-              <span>
+              <span className="break-anywhere">
                 <span className="block font-bold">{topic.text}</span>
                 <span className="text-xs font-bold text-[#806344]">{categoryLabels[topic.category]}</span>
               </span>

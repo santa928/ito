@@ -7,16 +7,32 @@
 1. 人数を選びます。名前は任意です。
 2. スマホを順番に回して、自分の数字だけ確認します。
 3. お題に対して、数字の大きさを例えで伝えます。数字そのものは言いません。
-4. 相談して、カードを小さいと思う順に並べます。
+4. 相談して、カードを高い順（100→1）だと思う並びにします。左のハンドルをドラッグするか、上下ボタンで移動できます。
 5. 1枚ずつオープンして、順番違いのミスを確認します。
 6. 最後に数字とミス箇所をふりかえります。
+
+2〜8人で遊べます。2〜3人は1人2枚、4〜8人は1人1枚です。数字は1〜100から重複なく配られます。
+ミスは全カードを高い順にした正解位置との比較です。例えば正解が90・70・40・10、提出が70・90・40・10なら、最初の2枚だけがミスになります。
+ふりかえりの「正解の順を見る」で実際の順番と比べられます。
+
+カードの数字は押している間だけ表示されます。キーボードはSpace/Enterです。
+途中の「ホーム」は終了確認を表示します。「続ける」またはEscapeで同じゲームに戻れます。
+ラウンドは保存されないため、再読込・ブラウザ終了からの再開はできません。
+
+お題をすべてOFFにした設定も保存できます。抽選対象0件では開始できないため「お題を選ぶ」からカテゴリとお題をONにします。
+参加者名は前後の空白を除いて24文字まで。同名でも参加順の番号で区別できます。壊れた設定を復元した場合は案内を表示し、お題管理で「保存」を押すまで端末の元データを書き換えません。この場合、名前も今回のプレイ中だけ反映されます。
+
+## アプリの更新
+
+新しい版を検出したら、ホームに更新案内が出ます。「更新する」を押したときだけ画面を再読み込みします。プレイ中・結果画面には案内を出さず、ホームへ戻るだけでは更新しません。保存できなかった設定がある場合は、更新前に失われることを案内します。
+
+この方式を入れる前の版には更新ボタンがありません。初回移行ではゲームを終えて、このアプリの全タブ・ホーム画面から開いたアプリを閉じてから開き直します。すぐに開き直すと旧版が続く場合があります。旧版からの移行時もラウンドは復元されません。
 
 ## 開発
 
 ホスト環境を汚さないため、npm系コマンドはDocker内で実行します。
 
 ```bash
-docker compose run --rm web npm install
 docker compose up web
 ```
 
@@ -29,12 +45,20 @@ http://localhost:5173
 ## 検証
 
 ```bash
-docker compose run --rm web npm test
-docker compose run --rm web npm run build
+docker compose stop web
+docker compose run --rm e2e npm ci
+docker compose run --rm e2e npm test
+docker compose run --rm e2e npm run lint
+docker compose run --rm e2e npm run build
 docker compose run --rm e2e npm run e2e
+docker compose run --rm e2e npm run test:pwa
 ```
 
-E2EはPlaywright公式イメージの `e2e` サービスで実行します。既に5173番ポートを使っているコンテナがある場合でも、上記の `docker compose run --rm e2e npm run e2e` はコンテナ内でdev serverを起動して検証します。
+`web` と `e2e` は異なるLinux環境なので、依存volumeを分けています。各サービスで初回にlock準拠の `npm ci` が必要です（`web` は起動時に実行します）。E2EはWebKitとChromiumのモバイル設定を使い、直前のbuildをコンテナ内の4173番ポートでpreviewします。dev serverのHMRに依存せず、ホストのポートを別プロジェクトが使用していても実行できます。テスト中に別buildで `dist/` を書き換えないでください。
+
+`test:pwa` は固定した旧commitと現行・次版の本番buildを作り、同じURLで本物のService Workerを更新します。旧版の依存取得にネットワークを使い、完了後に一時コピーを削除します。旧commitのGit履歴が必要です。結果は `test-results/pwa-report.json`、E2E画像は `test-results/screenshots/` に出ます。E2Eは `test-results/` を初期化するためPWA検証を最後に実行します。
+
+PRではunit・lint・型検査/build・E2Eを実行し、デプロイしません。PWAの世代間検証は、更新方式を変更したときと公開前に実行します。見直し内容・要件対応・実機検証の制限は [docs/product-review.md](docs/product-review.md) を参照してください。
 
 ## 公開
 

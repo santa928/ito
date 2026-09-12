@@ -10,6 +10,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:pwa": "node tests/pwa/verify.mjs",
     "e2e": "playwright test"
   },
   "dependencies": {
@@ -37,7 +38,7 @@
     "playwright": "^1.59.1",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12",
+    "vite": "~8.0.16",
     "vitest": "^4.1.6"
   }
 }

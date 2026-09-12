@@ -1,0 +1,26 @@
+name: PR validation
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Unit tests
+        run: npm test
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck and build
+        run: npm run build
+      - name: Mobile browser tests
+        run: npm run e2e

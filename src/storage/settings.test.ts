@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { defaultSettings, loadSettings, saveSettings } from './settings'
+import { defaultSettings, loadSettings, loadSettingsWithNotice, saveSettings } from './settings'
 
 const storageKey = 'ito-like-party-card-game/settings/v1'
 
@@ -110,6 +110,36 @@ describe('settings storage', () => {
     })
 
     expect(loadSettings()).toEqual(defaultSettings)
+  })
+
+  it.each([0, 1, 9, 101])('limits %i restored players to at most eight', (count) => {
+    const names = Array.from({ length: count }, (_, i) => `P${i}`)
+    localStorage.setItem(storageKey, JSON.stringify({ lastPlayerNames: names }))
+
+    expect(loadSettings().lastPlayerNames).toEqual(names.slice(0, 8))
+  })
+
+  it('keeps valid custom topics while rejecting empty and conflicting identities', () => {
+    const valid = { id: 'custom-valid', text: '好きな色', category: 'everyone', isBuiltin: false }
+    localStorage.setItem(storageKey, JSON.stringify({ customTopics: [
+      valid,
+      { ...valid, text: '重複ID' },
+      { ...valid, id: 'everyone-001' },
+      { ...valid, id: 'custom-empty', text: '   ' },
+      { ...valid, id: '' },
+      { ...valid, id: 'custom-wrong', isBuiltin: true },
+    ] }))
+
+    expect(loadSettings().customTopics).toEqual([valid, { ...valid, id: 'custom-wrong' }])
+    expect(loadSettingsWithNotice().notice).toContain('お題設定を調整')
+  })
+
+  it('normalizes long Unicode names without overwriting the stored original on load', () => {
+    const raw = JSON.stringify({ lastPlayerNames: ['  あき  ', '😀'.repeat(25)] })
+    localStorage.setItem(storageKey, raw)
+    expect(loadSettings().lastPlayerNames).toEqual(['あき', '😀'.repeat(24)])
+    expect(localStorage.getItem(storageKey)).toBe(raw)
+    expect(loadSettingsWithNotice().notice).toContain('名前は24文字まで')
   })
 
   it('returns a failure result when saving throws', () => {
