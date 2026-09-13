@@ -1,0 +1,332 @@
+{
+  "errors": [],
+  "checks": [
+    {
+      "screen": "home-390",
+      "width": 390,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "すぐ遊ぶ人数を選んでスタート",
+          "width": 314,
+          "height": 93
+        },
+        {
+          "label": "お題管理",
+          "width": 314,
+          "height": 48
+        },
+        {
+          "label": "遊び方",
+          "width": 314,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "screen": "home-320",
+      "width": 320,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "すぐ遊ぶ人数を選んでスタート",
+          "width": 244,
+          "height": 93
+        },
+        {
+          "label": "お題管理",
+          "width": 244,
+          "height": 48
+        },
+        {
+          "label": "遊び方",
+          "width": 244,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "screen": "how-to-390",
+      "width": 390,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "戻る",
+          "width": 66.375,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "screen": "setup-390",
+      "width": 390,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "お題を選ぶ",
+          "width": 288,
+          "height": 44
+        },
+        {
+          "label": "戻る",
+          "width": 151,
+          "height": 48
+        },
+        {
+          "label": "開始",
+          "width": 151,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "screen": "reveal-390",
+      "width": 390,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "ホーム",
+          "width": 104.65625,
+          "height": 44
+        },
+        {
+          "label": "お題",
+          "width": 104.671875,
+          "height": 44
+        },
+        {
+          "label": "カード確認",
+          "width": 104.65625,
+          "height": 44
+        },
+        {
+          "label": "長押しで見る",
+          "width": 272,
+          "height": 56
+        },
+        {
+          "label": "見終わった",
+          "width": 314,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "screen": "topic-390",
+      "width": 390,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "ホーム",
+          "width": 104.65625,
+          "height": 44
+        },
+        {
+          "label": "お題",
+          "width": 104.671875,
+          "height": 44
+        },
+        {
+          "label": "カード確認",
+          "width": 104.65625,
+          "height": 44
+        },
+        {
+          "label": "お題を再抽選",
+          "width": 314,
+          "height": 48
+        },
+        {
+          "label": "相談して並べ替える",
+          "width": 314,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "screen": "sort-390",
+      "width": 390,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "ホーム",
+          "width": 104.65625,
+          "height": 44
+        },
+        {
+          "label": "お題",
+          "width": 104.671875,
+          "height": 44
+        },
+        {
+          "label": "カード確認",
+          "width": 104.65625,
+          "height": 44
+        },
+        {
+          "label": "↕",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "↑",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "↓",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "↕",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "↑",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "↓",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "↕",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "↑",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "↓",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "↕",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "↑",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "↓",
+          "width": 44,
+          "height": 44
+        },
+        {
+          "label": "この順でオープン",
+          "width": 314,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "screen": "open-390",
+      "width": 390,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "ホーム",
+          "width": 104.65625,
+          "height": 44
+        },
+        {
+          "label": "お題",
+          "width": 104.671875,
+          "height": 44
+        },
+        {
+          "label": "カード確認",
+          "width": 104.65625,
+          "height": 44
+        },
+        {
+          "label": "次をオープン",
+          "width": 314,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "screen": "result-390",
+      "width": 390,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "ホーム",
+          "width": 151,
+          "height": 48
+        },
+        {
+          "label": "もう一度",
+          "width": 151,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "screen": "topics-390",
+      "width": 390,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "お題を追加",
+          "width": 314,
+          "height": 48
+        },
+        {
+          "label": "戻る",
+          "width": 151,
+          "height": 48
+        },
+        {
+          "label": "保存",
+          "width": 151,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "screen": "discard-390",
+      "width": 390,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "お題を追加",
+          "width": 314,
+          "height": 48
+        },
+        {
+          "label": "戻る",
+          "width": 151,
+          "height": 48
+        },
+        {
+          "label": "保存",
+          "width": 151,
+          "height": 48
+        },
+        {
+          "label": "編集を続ける",
+          "width": 310,
+          "height": 48
+        },
+        {
+          "label": "保存せず戻る",
+          "width": 310,
+          "height": 48
+        }
+      ]
+    }
+  ]
+}

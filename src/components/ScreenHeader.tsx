@@ -9,7 +9,7 @@ export function ScreenHeader({ eyebrow, title, description }: ScreenHeaderProps)
   return (
     <header className="mb-5">
       {eyebrow ? <p className="text-sm font-black tracking-[0.08em] text-[#8b6037]">{eyebrow}</p> : null}
-      <h1 className="font-board-title break-anywhere mt-1 text-3xl font-black leading-tight text-[#26180f]">{title}</h1>
+      <h1 tabIndex={-1} className="font-board-title break-anywhere mt-1 text-3xl font-black leading-snug text-[#26180f]">{title}</h1>
       {description ? <p className="mt-2 text-base font-medium leading-7 text-[#6a563d]">{description}</p> : null}
     </header>
   )

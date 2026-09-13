@@ -28,6 +28,7 @@ export function ResultScreen({
   return (
     <CardSurface>
       <ScreenHeader eyebrow="ふりかえり" title={mistakeCardIds.length === 0 ? '全員の順番がそろった！' : '数字とミスを確認'} description={`高い順（100→1）の正解位置と違うカードがミスです。${cards.length - mistakeCardIds.length} / ${cards.length}枚が正しい位置。今回までのプレイ回数: ${playCount}`} />
+      <p className="mb-5 rounded-xl bg-[#edf2e9] p-3 text-sm font-medium leading-6 text-[#285b49]">どの例えが伝わった？ 意外だった数字も、みんなで話してみましょう。</p>
       <h2 className="mb-3 font-black">みんなで並べた順</h2>
       <div className="grid gap-3">
         {openedCardIds.map((cardId, index) => {

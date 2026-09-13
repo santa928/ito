@@ -1,8 +1,9 @@
-import { useMemo, useReducer, useState } from 'react'
+import { useEffect, useMemo, useReducer, useState } from 'react'
 import { Layout } from './components/Layout'
 import { PrimaryButton } from './components/PrimaryButton'
 import { RoundControls } from './components/RoundControls'
 import { UpdatePrompt } from './components/UpdatePrompt'
+import { RoundProgress } from './components/RoundProgress'
 import { getEnabledTopics, pickTopic } from './domain/topics'
 import { cardsPerPlayer, createCardValues, limitPlayerName } from './domain/game'
 import type { Topic } from './domain/types'
@@ -39,6 +40,11 @@ export function App() {
   const [settingsReturnScreen, setSettingsReturnScreen] = useState<'home' | 'setup'>('home')
   const playableTopics = useMemo(() => getPlayableTopics(settings), [settings])
   const round = state.round
+  // 画面を進めた後も前の画面のスクロール位置に取り残さず、見出しから読めるようにする。
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    document.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
+  }, [state.screen])
   const rerollDisabledReason = round && round.openedCardIds.length > 0
     ? 'カードを開いた後は、お題を変更できません。'
     : playableTopics.length < 2 ? '再抽選するには、お題を2件以上ONにしてください。' : null
@@ -98,12 +104,13 @@ export function App() {
         <div role="status" className="mb-3 rounded-xl border border-[#d8b77a] bg-[#fff4d9] p-3 text-sm font-bold text-[#5a4631]">
           <div className="flex items-center justify-between gap-3">
             <span>{state.notice}</span>
-            <PrimaryButton className="min-h-9 px-3 py-1 text-sm" variant="secondary" onClick={() => dispatch({ type: 'clearNotice' })}>
+            <PrimaryButton size="compact" className="shrink-0" variant="secondary" onClick={() => dispatch({ type: 'clearNotice' })}>
               閉じる
             </PrimaryButton>
           </div>
         </div>
       ) : null}
+      {showRoundControls ? <RoundProgress phase={state.screen} /> : null}
       {showRoundControls ? (
         <RoundControls
           key={state.screen}
