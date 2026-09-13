@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import type { KeyboardEvent } from 'react'
 import { CardSurface } from '../components/CardSurface'
 import { PrimaryButton } from '../components/PrimaryButton'
 import { ScreenHeader } from '../components/ScreenHeader'
@@ -16,6 +17,7 @@ type SetupScreenProps = {
 export function SetupScreen({ initialNames, playableTopicCount, onBack, onStart, onTopics }: SetupScreenProps) {
   const [playerCount, setPlayerCount] = useState(Math.min(MAX_PLAYERS, Math.max(MIN_PLAYERS, initialNames.length || 3)))
   const [names, setNames] = useState<string[]>(initialNames.length > 0 ? initialNames : ['', '', ''])
+  const nameInputs = useRef<(HTMLInputElement | null)[]>([])
 
   const visibleNames = Array.from({ length: playerCount }, (_, index) => names[index] ?? '')
 
@@ -26,17 +28,21 @@ export function SetupScreen({ initialNames, playableTopicCount, onBack, onStart,
     setNames(nextNames)
   }
 
+  /** IMEの確定では移動せず、次へ/完了キーで入力先を進める。ゲームは開始しない。 */
+  function advanceName(event: KeyboardEvent<HTMLInputElement>, index: number) {
+    if (event.key !== 'Enter' || event.nativeEvent.isComposing || event.keyCode === 229) return
+    event.preventDefault()
+    if (index < playerCount - 1) nameInputs.current[index + 1]?.focus()
+    else event.currentTarget.blur()
+  }
+
   return (
     <CardSurface>
       <ScreenHeader eyebrow="準備" title="遊ぶ人を決める" description="名前は24文字まで。空でも始められます。2〜3人は1人2枚、4〜8人は1人1枚です。" />
       <div className="mb-5 grid gap-3 rounded-xl border border-[#d8c3a0] bg-[#fffaf0] p-3">
         <p className="text-sm font-bold">抽選対象{playableTopicCount}件</p>
-        {playableTopicCount === 0 ? (
-          <>
-            <p role="status" className="text-sm leading-6">カテゴリとお題を1件以上ONにしてください。</p>
-            <PrimaryButton variant="secondary" onClick={() => onTopics(visibleNames)}>お題を選ぶ</PrimaryButton>
-          </>
-        ) : null}
+        {playableTopicCount === 0 ? <p role="status" className="text-sm leading-6">カテゴリとお題を1件以上ONにしてください。</p> : null}
+        <PrimaryButton size="compact" variant="secondary" onClick={() => onTopics(visibleNames)}>お題を選ぶ</PrimaryButton>
       </div>
       <label className="grid gap-2 text-sm font-bold text-[#5a4631]">
         人数
@@ -58,10 +64,14 @@ export function SetupScreen({ initialNames, playableTopicCount, onBack, onStart,
           <label key={index} className="grid gap-2 text-sm font-bold text-[#5a4631]">
             プレイヤー{index + 1}
             <input
+              ref={(node) => { nameInputs.current[index] = node }}
               aria-label={`プレイヤー${index + 1}`}
               className="min-h-12 rounded-xl border border-[#c79b57] bg-[#fff8e9] px-3 text-base font-bold shadow-inner"
               value={name}
+              autoComplete="off"
+              enterKeyHint={index === playerCount - 1 ? 'done' : 'next'}
               onChange={(event) => updateName(index, event.target.value)}
+              onKeyDown={(event) => advanceName(event, index)}
               placeholder={`プレイヤー${index + 1}`}
             />
           </label>

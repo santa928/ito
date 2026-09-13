@@ -11,7 +11,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['pwa-192x192.svg', 'pwa-512x512.svg'],
+      includeAssets: ['pwa-192x192.svg', 'pwa-512x512.svg', 'pwa-192x192.png', 'pwa-512x512.png', 'apple-touch-icon.png'],
       devOptions: {
         enabled: false,
       },
@@ -22,9 +22,19 @@ export default defineConfig({
         display: 'standalone',
         start_url: './',
         scope: './',
-        theme_color: '#5b3f26',
+        theme_color: '#285b49',
         background_color: '#f5ead8',
         icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
           {
             src: 'pwa-192x192.svg',
             sizes: '192x192',

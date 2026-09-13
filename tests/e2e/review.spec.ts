@@ -70,7 +70,10 @@ for (const count of [2, 3, 8]) {
       await page.getByRole('button', { name: '相談して並べ替える' }).click()
       await page.getByRole('button', { name: 'この順でオープン' }).click()
       const cardCount = count <= 3 ? count * 2 : count
-      for (let i = 0; i < cardCount; i += 1) await page.getByRole('button', { name: '次をオープン' }).click()
+      for (let i = 0; i < cardCount; i += 1) {
+        await page.getByRole('button', { name: '次をオープン' }).click()
+        await expect(page.getByRole('status').filter({ hasText: `いま開いたカード（${i + 1}枚目）` })).toBeInViewport({ ratio: 1 })
+      }
       await page.getByRole('button', { name: 'ふりかえりへ' }).click()
       await expect(page.getByText(`今回までのプレイ回数: ${round}`, { exact: false })).toBeVisible()
       await page.getByText('正解の順を見る', { exact: true }).click()
@@ -157,6 +160,11 @@ test('8人と長い同名でも3つの画面幅に収まり、指でスクロー
   await expect(rows.first()).toContainText('（1番）')
   await page.getByRole('button', { name: 'この順でオープン' }).click()
   await expect(page.getByRole('heading', { name: '1枚ずつオープン' })).toBeVisible()
+  const open = page.getByRole('button', { name: '次をオープン' })
+  const actionY = (await open.boundingBox())!.y
+  await open.click()
+  await expect(page.getByRole('status').filter({ hasText: 'いま開いたカード（1枚目）' })).toBeInViewport({ ratio: 1 })
+  expect((await open.boundingBox())!.y).toBe(actionY)
 })
 
 test('ホームへの誤操作を取り消して同じカード順で続けられる', async ({ page }) => {

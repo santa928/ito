@@ -4,7 +4,7 @@
   color: #2f2418;
   background: #5b351f;
   font-family: "Hiragino Sans", "Yu Gothic", "YuGothic", "Noto Sans JP", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-synthesis: none;
+  font-synthesis: weight;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -14,12 +14,6 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-}
-
-button,
-input,
-textarea {
-  font: inherit;
 }
 
 body {
@@ -51,9 +45,30 @@ body {
   background: rgb(44 27 16 / 55%);
 }
 
-:focus-visible {
+:where(button, a, input, select, textarea, summary, [tabindex="0"]):focus-visible {
   outline: 3px solid #2b6655;
   outline-offset: 4px;
+}
+
+h1:focus {
+  outline: none;
+}
+
+/* キーボード入力時のズームと、内容に応じた折り返しを全画面で揃える。 */
+@layer base {
+  input:not([type="checkbox"]), select, textarea { font-size: 1rem; }
+  input[type="checkbox"] { accent-color: #285b49; width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+  button:not(:disabled), summary, select { cursor: pointer; }
+  p { text-wrap: pretty; }
+  h1, h2 { text-wrap: balance; }
+}
+
+.app-page {
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0s !important; animation-duration: 0s !important; }
 }
 
 .font-board-title {

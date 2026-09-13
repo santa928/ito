@@ -118,7 +118,7 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
           )
         })}
       </div>
-      <PrimaryButton className="mt-5" onClick={onNext}>
+      <PrimaryButton className="mt-5 w-full" onClick={onNext}>
         この順でオープン
       </PrimaryButton>
     </CardSurface>

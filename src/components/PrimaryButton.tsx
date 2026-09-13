@@ -3,6 +3,13 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 type PrimaryButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode
   variant?: 'primary' | 'secondary' | 'danger'
+  size?: 'normal' | 'large' | 'compact'
+}
+
+const sizeClassName = {
+  normal: 'min-h-12 px-4 py-3 text-base',
+  large: 'min-h-16 px-4 py-4 text-2xl',
+  compact: 'min-h-11 px-3 py-2 text-sm',
 }
 
 const variantClassName = {
@@ -15,10 +22,11 @@ const variantClassName = {
 }
 
 /** 卓上カード風の主要アクションボタンを描画する。 */
-export function PrimaryButton({ children, variant = 'primary', className = '', ...props }: PrimaryButtonProps) {
+export function PrimaryButton({ children, variant = 'primary', size = 'normal', className = '', type = 'button', ...props }: PrimaryButtonProps) {
   return (
     <button
-      className={`min-h-12 rounded-2xl border px-4 py-3 text-base font-black transition disabled:cursor-not-allowed disabled:opacity-50 ${variantClassName[variant]} ${className}`}
+      type={type}
+      className={`min-w-0 rounded-2xl border font-bold leading-snug transition-transform duration-150 disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none ${sizeClassName[size]} ${variantClassName[variant]} ${className}`}
       {...props}
     >
       {children}

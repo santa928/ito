@@ -39,9 +39,9 @@ export function SecretCards({ cards, players, ownerId }: SecretCardsProps) {
     <div>
       <div className="grid gap-3">
         {cards.filter((card) => card.ownerId === ownerId).map((card) => (
-          <div key={card.id} className="min-w-0 rounded-2xl border border-[#e0c18a] bg-[#fffaf0] px-4 py-4 text-center shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)]">
+          <div key={card.id} className="min-w-0 rounded-2xl border border-[#e0c18a] bg-[#fffaf0] px-3 py-3 text-center shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)]">
             <p className="break-anywhere text-sm font-bold text-[#806344]">{formatCardLabel(cards, players, card)}</p>
-            <p className="mt-2 text-5xl font-black">{visible ? card.value : '?'}</p>
+            <p className="mt-2 text-5xl font-black tabular-nums">{visible ? card.value : '?'}</p>
           </div>
         ))}
       </div>
@@ -78,7 +78,7 @@ export function SecretCards({ cards, players, ownerId }: SecretCardsProps) {
       >
         長押しで見る
       </button>
-      <p className="mt-3 text-center text-sm leading-6 text-[#5a4631]">指を離すと隠れます。キーボードはSpace / Enter。</p>
+      <p className="mt-3 text-center text-sm leading-6 text-[#5a4631]">指を離すと数字が隠れます。<br /><span className="text-xs">キーボードはSpace / Enterを押して確認。</span></p>
     </div>
   )
 }
