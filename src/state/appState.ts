@@ -1,10 +1,20 @@
 import type { Card, Player, Topic } from '../domain/types'
 import { dealCards, judgeNextCard, normalizePlayers } from '../domain/game'
+import { assignRoles, voteLeaders } from '../domain/werewolf'
+import type { GameMode, Role, Verdict } from '../domain/werewolf'
+import { sortCardIdsByValue } from '../domain/game'
 import { builtInTopics, pickTopic } from '../domain/topics'
 
-export type Screen = 'home' | 'setup' | 'reveal' | 'topic' | 'sort' | 'open' | 'result' | 'topics' | 'howToPlay'
+export type Screen = 'home' | 'setup' | 'reveal' | 'topic' | 'sort' | 'open' | 'result' | 'topics' | 'howToPlay' | 'discussion' | 'vote'
 
 export type RoundState = {
+  mode: GameMode
+  roles: Record<string, Role>
+  discussionDeadline: number | null
+  votes: Record<string, string>
+  voteCandidates: string[]
+  ballot: 1 | 2
+  verdict: Verdict | null
   players: Player[]
   cards: Card[]
   sortedCardIds: string[]
@@ -25,11 +35,15 @@ export type AppState = {
 export type AppAction =
   | { type: 'go'; screen: Screen }
   | { type: 'endRound' }
-  | { type: 'startRound'; playerNames: string[]; cardValues: number[]; topicRandomValue?: number; topics?: Topic[] }
+  | { type: 'startRound'; mode?: GameMode; roleRandomValue?: number; playerNames: string[]; cardValues: number[]; topicRandomValue?: number; topics?: Topic[] }
   | { type: 'setSortedCardIds'; cardIds: string[] }
   | { type: 'setTopic'; topic: Topic }
   | { type: 'openCard'; cardId: string }
   | { type: 'finishRound' }
+  | { type: 'lockOrder' }
+  | { type: 'startDiscussion'; now: number }
+  | { type: 'startVote'; now: number }
+  | { type: 'castVote'; voterId: string; targetId: string; ballot: 1 | 2 }
   | { type: 'setNotice'; message: string }
   | { type: 'clearNotice' }
 
@@ -74,7 +88,10 @@ export function reducer(state: AppState, action: AppAction): AppState {
         sort: ['open'],
         open: [],
         result: [],
+        discussion: [],
+        vote: [],
       }
+      if (state.round?.mode === 'werewolf' && action.screen === 'open') return state
       return destinations[state.screen].includes(action.screen) ? { ...state, screen: action.screen } : state
     }
     case 'endRound':
@@ -87,11 +104,20 @@ export function reducer(state: AppState, action: AppAction): AppState {
       }
       try {
         const players = normalizePlayers(action.playerNames)
+        const mode = action.mode ?? 'normal'
+        const roles = mode === 'werewolf' ? assignRoles(players, action.roleRandomValue ?? Math.random()) : {}
         const cards = dealCards(players, action.cardValues)
         return {
           ...state,
           screen: 'reveal',
           round: {
+            mode,
+            roles,
+            discussionDeadline: null,
+            votes: {},
+            voteCandidates: players.map((player) => player.id),
+            ballot: 1,
+            verdict: null,
             players,
             cards,
             sortedCardIds: cards.map((card) => card.id),
@@ -136,6 +162,39 @@ export function reducer(state: AppState, action: AppAction): AppState {
           topic: action.topic,
         },
       }
+    }
+    case 'lockOrder': {
+      if (!state.round || state.round.mode !== 'werewolf' || state.screen !== 'sort') return state
+      const expected = sortCardIdsByValue(state.round.cards, 'ascending')
+      const mistakes = state.round.sortedCardIds.filter((id, index) => id !== expected[index])
+      const correct = mistakes.length === 0
+      return { ...state, screen: correct ? 'result' : 'discussion',
+        session: { playCount: state.session.playCount + (correct ? 1 : 0) },
+        round: { ...state.round, openedCardIds: [...state.round.sortedCardIds], mistakeCardIds: mistakes,
+          verdict: correct ? { winner: 'citizen', reason: 'order' } : null } }
+    }
+    case 'startDiscussion': {
+      if (!state.round || state.screen !== 'discussion' || state.round.discussionDeadline !== null || !Number.isFinite(action.now) || action.now < 0) return state
+      return { ...state, round: { ...state.round, discussionDeadline: action.now + 60_000 } }
+    }
+    case 'startVote': {
+      if (!state.round || state.screen !== 'discussion' || state.round.discussionDeadline === null || !Number.isFinite(action.now) || action.now < state.round.discussionDeadline) return state
+      return { ...state, screen: 'vote' }
+    }
+    case 'castVote': {
+      const round = state.round
+      if (!round || state.screen !== 'vote' || action.ballot !== round.ballot || round.votes[action.voterId]
+        || round.players[Object.keys(round.votes).length]?.id !== action.voterId
+        || action.voterId === action.targetId || !round.voteCandidates.includes(action.targetId)) return state
+      const votes = { ...round.votes, [action.voterId]: action.targetId }
+      if (Object.keys(votes).length < round.players.length) return { ...state, round: { ...round, votes } }
+      const leaders = voteLeaders(votes)
+      if (leaders.length > 1 && round.ballot === 1) {
+        return { ...state, round: { ...round, votes: {}, voteCandidates: leaders, ballot: 2 } }
+      }
+      const caught = leaders.length === 1 && round.roles[leaders[0]] === 'wolf'
+      return { ...state, screen: 'result', session: { playCount: state.session.playCount + 1 },
+        round: { ...round, votes, verdict: { winner: caught ? 'citizen' : 'wolf', reason: leaders.length > 1 ? 'tie' : caught ? 'caught' : 'escaped' } } }
     }
     case 'openCard': {
       if (!state.round || state.screen !== 'open' || state.round.openedCardIds.includes(action.cardId)) {

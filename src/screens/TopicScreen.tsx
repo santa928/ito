@@ -4,6 +4,7 @@ import { ScreenHeader } from '../components/ScreenHeader'
 import type { Topic } from '../domain/types'
 
 type TopicScreenProps = {
+  ascending?: boolean
   topic: Topic
   rerollDisabledReason: string | null
   onReroll: () => void
@@ -11,13 +12,13 @@ type TopicScreenProps = {
 }
 
 /** 今回のお題と、数字を言わない相談ルールを表示する画面。 */
-export function TopicScreen({ topic, rerollDisabledReason, onReroll, onNext }: TopicScreenProps) {
+export function TopicScreen({ topic, ascending, rerollDisabledReason, onReroll, onNext }: TopicScreenProps) {
   return (
     <CardSurface>
       <ScreenHeader
         eyebrow="お題"
         title={topic.text}
-        description="数字は言わず、このお題に対する例えを順番に宣言してください。高い順（100→1）に並べます。"
+        description={`数字は言わず、このお題に対する例えを順番に宣言してください。${ascending ? '小さい順（1→100）' : '高い順（100→1）'}に並べます。${ascending ? '人狼は並びを妨害。正解なら市民勝利、間違いなら数字公開後に議論・投票です。' : ''}`}
       />
       {rerollDisabledReason ? <p className="mb-4 text-sm text-[#5a4631]">{rerollDisabledReason}</p> : null}
       <div className="grid gap-3 sm:grid-cols-2">

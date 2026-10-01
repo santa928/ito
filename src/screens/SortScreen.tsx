@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import type { PointerEvent } from 'react'
+import { Modal } from '../components/Modal'
 import { CardSurface } from '../components/CardSurface'
 import { PrimaryButton } from '../components/PrimaryButton'
 import { ScreenHeader } from '../components/ScreenHeader'
@@ -7,6 +8,7 @@ import { formatCardLabel } from '../domain/cardLabels'
 import type { Card, Player } from '../domain/types'
 
 type SortScreenProps = {
+  ascending?: boolean
   cards: Card[]
   players: Player[]
   sortedCardIds: string[]
@@ -15,7 +17,8 @@ type SortScreenProps = {
 }
 
 /** 相談結果として、伏せカードを高いと思う順に並べる画面。 */
-export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: SortScreenProps) {
+export function SortScreen({ cards, players, ascending, sortedCardIds, onChange, onNext }: SortScreenProps) {
+  const [confirming, setConfirming] = useState(false)
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
   const rowRefs = useRef(new Map<string, HTMLDivElement>())
 
@@ -82,7 +85,7 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
 
   return (
     <CardSurface>
-      <ScreenHeader eyebrow="相談" title="高い順に並べる" description="高い順（100→1）です。左の↕を押したまま動かすか、上下ボタンで並べます。名前の上ではスクロールできます。" />
+      <ScreenHeader eyebrow="相談" title={ascending ? '小さい順に並べる' : '高い順に並べる'} description={`${ascending ? '小さい順（1→100）' : '高い順（100→1）'}です。左の↕を押したまま動かすか、上下ボタンで並べます。名前の上ではスクロールできます。`} />
       <div className="grid gap-3">
         {sortedCardIds.map((cardId, index) => {
           const card = cards.find((candidate) => candidate.id === cardId)!
@@ -107,7 +110,7 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
                 ↕
               </button>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-[#806344]">{index + 1}番目に高い</p>
+                <p className="text-xs font-bold text-[#806344]">{index + 1}番目に{ascending ? '小さい' : '高い'}</p>
                 <p className="break-anywhere font-bold">{label}</p>
               </div>
               <div className="grid gap-2">
@@ -118,9 +121,17 @@ export function SortScreen({ cards, players, sortedCardIds, onChange, onNext }: 
           )
         })}
       </div>
-      <PrimaryButton className="mt-5 w-full" onClick={onNext}>
-        この順でオープン
+      <PrimaryButton className="mt-5 w-full" onClick={() => ascending ? setConfirming(true) : onNext()}>
+        {ascending ? '並びを確定・数字公開' : 'この順でオープン'}
       </PrimaryButton>
+      {confirming ? <Modal label="並びを確定しますか？" onClose={() => setConfirming(false)}>
+        <h2 className="text-2xl font-black">並びを確定しますか？</h2>
+        <p className="mt-3 leading-7">全員の数字を公開します。公開後は並びとお題を変更できません。役職は結果まで公開しません。</p>
+        <div className="mt-5 grid gap-3">
+          <PrimaryButton autoFocus variant="secondary" onClick={() => setConfirming(false)}>並べ替えに戻る</PrimaryButton>
+          <PrimaryButton onClick={onNext}>確定して数字を公開</PrimaryButton>
+        </div>
+      </Modal> : null}
     </CardSurface>
   )
 }

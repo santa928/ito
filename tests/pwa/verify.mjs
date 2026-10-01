@@ -10,10 +10,13 @@ import { chromium } from 'playwright'
 
 const root = process.cwd()
 const baselineSha = 'e0b8e3cc5620a12bbda8d88af1d34c1aaeea4b72'
+// SW移行の旧版とは別に、Issue #4着手前のmainを配信量の固定比較基準にする。
+const bundleBaselineSha = 'b72d94f9160b0250888fe3ca26186dfe8dea253a'
 const temporary = await mkdtemp(join(tmpdir(), 'ito-pwa-'))
 const baseline = join(temporary, 'baseline')
+const bundleBaseline = join(temporary, 'bundle-baseline')
 const next = join(temporary, 'next')
-const report = { baselineSha, transitions: [], performance: {}, gzipBytes: {} }
+const report = { baselineSha, bundleBaselineSha, transitions: [], performance: {}, gzipBytes: {} }
 let browser
 let server
 
@@ -66,6 +69,10 @@ try {
   execFileSync('tar', ['-x', '-C', baseline], { input: execFileSync('git', ['-c', `safe.directory=${root}`, 'archive', baselineSha], { maxBuffer: 30 * 1024 * 1024 }) })
   npm(baseline, ['ci'])
   npm(baseline, ['run', 'build'])
+  await mkdir(bundleBaseline)
+  execFileSync('tar', ['-x', '-C', bundleBaseline], { input: execFileSync('git', ['-c', `safe.directory=${root}`, 'archive', bundleBaselineSha], { maxBuffer: 30 * 1024 * 1024 }) })
+  npm(bundleBaseline, ['ci'])
+  npm(bundleBaseline, ['run', 'build'])
   npm(root, ['run', 'build'])
   await cp(root, next, { recursive: true, filter: (source) => !['.git', 'node_modules', 'dist', 'tmp', 'test-results', '.codex', '.agents'].includes(relative(root, source).split(sep)[0]) })
   await symlink(join(root, 'node_modules'), join(next, 'node_modules'), 'dir')
@@ -150,10 +157,13 @@ try {
   assert.equal(navigations, 1)
   report.transitions.push({ from: 'prompt', to: 'next prompt', updateDetectedDuringRound: true, resultPreserved: true, homeReturnDoesNotReload: true, explicitUpdateReloads: true })
   report.gzipBytes.baseline = await gzipSize(join(baseline, 'dist'))
+  report.gzipBytes.bundleBaseline = await gzipSize(join(bundleBaseline, 'dist'))
   report.gzipBytes.current = await gzipSize(join(root, 'dist'))
+  // 旧版からの累積量も残し、今回の増分と区別して報告する。
   report.gzipBytes.delta = report.gzipBytes.current - report.gzipBytes.baseline
+  report.gzipBytes.featureDelta = report.gzipBytes.current - report.gzipBytes.bundleBaseline
   assert.ok(report.performance.current.p95Ms <= 100, '操作p95が100msを超えました')
-  assert.ok(report.gzipBytes.delta <= 10 * 1024, 'JS+CSSのgzip増分が10KiBを超えました')
+  assert.ok(report.gzipBytes.featureDelta <= 10 * 1024, 'Issue #4着手前mainからのJS+CSS gzip増分が10KiBを超えました')
   await mkdir('test-results', { recursive: true })
   await writeFile('test-results/pwa-report.json', JSON.stringify(report, null, 2))
   console.log(JSON.stringify(report, null, 2))

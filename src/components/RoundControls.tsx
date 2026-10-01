@@ -5,7 +5,11 @@ import { PrimaryButton } from './PrimaryButton'
 import { Modal } from './Modal'
 import { SecretCards } from './SecretCards'
 
+import type { Role } from '../domain/werewolf'
+
 type RoundControlsProps = {
+  roles?: Record<string, Role>
+  ascending?: boolean
   topic: Topic
   players: Player[]
   cards: Card[]
@@ -17,7 +21,7 @@ type RoundControlsProps = {
 type ReviewMode = 'topic' | 'cards' | 'exit' | null
 
 /** ラウンドの終了確認と、秘密表示を持ち越さないお題・本人カードの再確認を提供する。 */
-export function RoundControls({ topic, players, cards, rerollDisabledReason, onHome, onRerollTopic }: RoundControlsProps) {
+export function RoundControls({ topic, players, cards, roles, ascending, rerollDisabledReason, onHome, onRerollTopic }: RoundControlsProps) {
   const [mode, setMode] = useState<ReviewMode>(null)
   const [selectedPlayerId, setSelectedPlayerId] = useState(players[0]?.id ?? '')
   const selectedPlayer = players.find((player) => player.id === selectedPlayerId) ?? players[0]
@@ -52,7 +56,7 @@ export function RoundControls({ topic, players, cards, rerollDisabledReason, onH
             <>
               <p className="text-sm font-black text-[#806344]">お題確認</p>
               <h2 className="mt-2 text-2xl font-black leading-tight">{topic.text}</h2>
-              <p className="mt-3 text-sm font-bold leading-relaxed text-[#5a4631]">数字は言わず、このお題に対する例えで相談します。並べるのは高い順（100→1）です。</p>
+              <p className="mt-3 text-sm font-bold leading-relaxed text-[#5a4631]">数字は言わず、このお題に対する例えで相談します。並べるのは{ascending ? '小さい順（1→100）' : '高い順（100→1）'}です。</p>
               {rerollDisabledReason ? <p className="mt-3 text-sm text-[#5a4631]">{rerollDisabledReason}</p> : null}
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <PrimaryButton variant="secondary" disabled={Boolean(rerollDisabledReason)} onClick={onRerollTopic}>再抽選</PrimaryButton>
@@ -76,7 +80,7 @@ export function RoundControls({ topic, players, cards, rerollDisabledReason, onH
                 ))}
               </div>
               <div className="mt-4">
-                {selectedPlayer ? <SecretCards key={selectedPlayer.id} cards={cards} players={players} ownerId={selectedPlayer.id} /> : null}
+                {selectedPlayer ? <SecretCards key={selectedPlayer.id} cards={cards} players={players} ownerId={selectedPlayer.id} role={roles?.[selectedPlayer.id]} /> : null}
               </div>
               <PrimaryButton autoFocus className="mt-4 w-full" variant="secondary" onClick={closeDialog}>閉じる</PrimaryButton>
             </>

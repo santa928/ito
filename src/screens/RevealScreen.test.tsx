@@ -53,3 +53,29 @@ describe('本人だけのカード確認', () => {
     expect(screen.queryByText('24')).not.toBeInTheDocument()
   })
 })
+
+describe('人狼の秘密確認', () => {
+  it.each(['blur', 'pagehide', 'visibilitychange', 'pointercancel'])('%sで数字と役職をDOMから消す', (eventName) => {
+    render(<RevealScreen players={players} cards={cards} roles={{ a: 'wolf', b: 'citizen' }} onComplete={vi.fn()} />)
+    const hold = screen.getByRole('button', { name: '長押しで見る' })
+    expect(screen.queryByText(/役職:/)).not.toBeInTheDocument()
+    fireEvent(hold, new MouseEvent('pointerdown', { button: 0, bubbles: true }))
+    expect(screen.getByText('24')).toBeVisible()
+    expect(screen.getByText('役職: 人狼')).toBeVisible()
+    const target = eventName === 'visibilitychange' ? document : eventName === 'pointercancel' ? hold : window
+    fireEvent(target, new Event(eventName, { bubbles: true }))
+    expect(screen.queryByText('24')).not.toBeInTheDocument()
+    expect(screen.queryByText(/役職:/)).not.toBeInTheDocument()
+  })
+  it('次の人に数字と役職を持ち越さず、通常モードに役職を表示しない', () => {
+    const { rerender } = render(<RevealScreen players={players} cards={cards} roles={{ a: 'wolf', b: 'citizen' }} onComplete={vi.fn()} />)
+    fireEvent.keyDown(screen.getByRole('button', { name: '長押しで見る' }), { key: ' ' })
+    fireEvent.click(screen.getByRole('button', { name: '見終わった' }))
+    expect(screen.queryByText('24')).not.toBeInTheDocument()
+    expect(screen.queryByText(/役職:/)).not.toBeInTheDocument()
+    fireEvent.keyDown(screen.getByRole('button', { name: '長押しで見る' }), { key: ' ' })
+    expect(screen.getByText('役職: 市民')).toBeVisible()
+    rerender(<RevealScreen players={players} cards={cards} onComplete={vi.fn()} />)
+    expect(screen.queryByText(/役職:/)).not.toBeInTheDocument()
+  })
+})

@@ -6,6 +6,8 @@ import { UpdatePrompt } from './components/UpdatePrompt'
 import { RoundProgress } from './components/RoundProgress'
 import { getEnabledTopics, pickTopic } from './domain/topics'
 import { cardsPerPlayer, createCardValues, limitPlayerName } from './domain/game'
+import { WerewolfScreen } from './screens/WerewolfScreen'
+import type { GameMode } from './domain/werewolf'
 import type { Topic } from './domain/types'
 import { HomeScreen } from './screens/HomeScreen'
 import { HowToPlayScreen } from './screens/HowToPlayScreen'
@@ -36,6 +38,7 @@ export function App() {
   const [needsExplicitSave, setNeedsExplicitSave] = useState(Boolean(loaded.notice))
   const [hasUnsavedSettings, setHasUnsavedSettings] = useState(Boolean(loaded.notice))
   const lastNames = useMemo(() => settings.lastPlayerNames, [settings.lastPlayerNames])
+  const [gameMode, setGameMode] = useState<GameMode>('normal')
   const [setupNames, setSetupNames] = useState<string[] | null>(null)
   const [settingsReturnScreen, setSettingsReturnScreen] = useState<'home' | 'setup'>('home')
   const playableTopics = useMemo(() => getPlayableTopics(settings), [settings])
@@ -50,7 +53,7 @@ export function App() {
     : playableTopics.length < 2 ? '再抽選するには、お題を2件以上ONにしてください。' : null
 
   /** 配布前に人数を検査し、保存に失敗しても今回のゲームは続ける。 */
-  function startRound(names: string[]) {
+  function startRound(names: string[], mode: GameMode = gameMode) {
     if (playableTopics.length === 0) {
       dispatch({ type: 'setNotice', message: 'お題が0件です。お題管理でカテゴリとお題を1件以上ONにしてください。' })
       return
@@ -60,9 +63,10 @@ export function App() {
     try {
       if (!Array.isArray(names) || names.some((name) => typeof name !== 'string')) throw new Error('名前が不正です')
       normalizedNames = names.map((name) => limitPlayerName(name.trim()))
+      if (mode === 'werewolf' && (names.length < 4 || names.length > 8)) throw new Error('人数が不正です')
       cardValues = createCardValues(names.length * cardsPerPlayer(names.length))
     } catch {
-      dispatch({ type: 'setNotice', message: '人数を2〜8人にして、もう一度開始してください。' })
+      dispatch({ type: 'setNotice', message: mode === 'werewolf' ? '人数を4〜8人にして、もう一度開始してください。' : '人数を2〜8人にして、もう一度開始してください。' })
       return
     }
     const nextSettings = { ...settings, lastPlayerNames: normalizedNames }
@@ -75,6 +79,8 @@ export function App() {
     }
     dispatch({
       type: 'startRound',
+      mode,
+      roleRandomValue: mode === 'werewolf' ? Math.random() : undefined,
       playerNames: normalizedNames,
       cardValues,
       topics: getPlayableTopics(nextSettings),
@@ -110,10 +116,12 @@ export function App() {
           </div>
         </div>
       ) : null}
-      {showRoundControls ? <RoundProgress phase={state.screen} /> : null}
+      {round && ['reveal', 'topic', 'sort', 'open', 'discussion', 'vote'].includes(state.screen) ? <RoundProgress phase={state.screen} mode={round.mode} /> : null}
       {showRoundControls ? (
         <RoundControls
           key={state.screen}
+          roles={round.roles}
+          ascending={round.mode === 'werewolf'}
           topic={round.topic}
           players={round.players}
           cards={round.cards}
@@ -131,10 +139,12 @@ export function App() {
       ) : null}
       {state.screen === 'setup' ? (
         <SetupScreen
+          mode={gameMode}
+          onModeChange={setGameMode}
           initialNames={setupNames ?? lastNames}
           playableTopicCount={playableTopics.length}
           onBack={() => dispatch({ type: 'go', screen: 'home' })}
-          onStart={startRound}
+          onStart={(names) => startRound(names)}
           onTopics={(names) => {
             setSetupNames(names)
             setSettingsReturnScreen('setup')
@@ -143,18 +153,19 @@ export function App() {
         />
       ) : null}
       {state.screen === 'reveal' && round ? (
-        <RevealScreen players={round.players} cards={round.cards} onComplete={() => dispatch({ type: 'go', screen: 'topic' })} />
+        <RevealScreen roles={round.roles} players={round.players} cards={round.cards} onComplete={() => dispatch({ type: 'go', screen: 'topic' })} />
       ) : null}
       {state.screen === 'topic' && round ? (
-        <TopicScreen topic={round.topic} rerollDisabledReason={rerollDisabledReason} onReroll={rerollTopic} onNext={() => dispatch({ type: 'go', screen: 'sort' })} />
+        <TopicScreen ascending={round.mode === 'werewolf'} topic={round.topic} rerollDisabledReason={rerollDisabledReason} onReroll={rerollTopic} onNext={() => dispatch({ type: 'go', screen: 'sort' })} />
       ) : null}
       {state.screen === 'sort' && round ? (
         <SortScreen
+          ascending={round.mode === 'werewolf'}
           cards={round.cards}
           players={round.players}
           sortedCardIds={round.sortedCardIds}
           onChange={(cardIds) => dispatch({ type: 'setSortedCardIds', cardIds })}
-          onNext={() => dispatch({ type: 'go', screen: 'open' })}
+          onNext={() => dispatch(round.mode === 'werewolf' ? { type: 'lockOrder' } : { type: 'go', screen: 'open' })}
         />
       ) : null}
       {state.screen === 'open' && round ? (
@@ -168,16 +179,19 @@ export function App() {
           onFinish={() => dispatch({ type: 'finishRound' })}
         />
       ) : null}
-      {state.screen === 'result' && round ? (
+      {state.screen === 'result' && round?.mode === 'normal' ? (
         <ResultScreen
           cards={round.cards}
           players={round.players}
           openedCardIds={round.openedCardIds}
           mistakeCardIds={round.mistakeCardIds}
           playCount={state.session.playCount}
-          onAgain={() => startRound(round.players.map((player) => player.name))}
+          onAgain={() => startRound(round.players.map((player) => player.name), round.mode)}
           onHome={() => dispatch({ type: 'endRound' })}
         />
+      ) : null}
+      {round?.mode === 'werewolf' && (state.screen === 'discussion' || state.screen === 'vote' || state.screen === 'result') ? (
+        <WerewolfScreen phase={state.screen} round={round} dispatch={dispatch} onAgain={() => startRound(round.players.map((player) => player.name), round.mode)} />
       ) : null}
       {state.screen === 'howToPlay' ? <HowToPlayScreen onBack={() => dispatch({ type: 'go', screen: 'home' })} /> : null}
       {state.screen === 'topics' ? (

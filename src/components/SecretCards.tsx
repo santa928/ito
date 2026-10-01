@@ -2,14 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { formatCardLabel } from '../domain/cardLabels'
 import type { Card, Player } from '../domain/types'
 
+import type { Role } from '../domain/werewolf'
+
 type SecretCardsProps = {
   cards: Card[]
   players: Player[]
+  role?: Role
   ownerId: string
 }
 
 /** 本人の数字を押下中だけDOMに置く。所有者が変わるときはkeyで再生成する。 */
-export function SecretCards({ cards, players, ownerId }: SecretCardsProps) {
+export function SecretCards({ cards, players, ownerId, role }: SecretCardsProps) {
   const [visible, setVisible] = useState(false)
   const input = useRef<'pointer' | ' ' | 'Enter' | null>(null)
   const hide = useCallback(() => {
@@ -45,6 +48,7 @@ export function SecretCards({ cards, players, ownerId }: SecretCardsProps) {
           </div>
         ))}
       </div>
+      {role ? <p className="mt-3 min-h-7 text-xl font-black">{visible ? `役職: ${role === 'wolf' ? '人狼' : '市民'}` : null}</p> : null}
       <button
         type="button"
         className="secret-hold mt-5 min-h-14 w-full touch-none select-none rounded-2xl border border-[#d0a65c]/60 bg-[linear-gradient(180deg,#32705f_0%,#235747_100%)] px-4 text-base font-black text-white shadow-[0_7px_0_#173a31]"
@@ -78,7 +82,7 @@ export function SecretCards({ cards, players, ownerId }: SecretCardsProps) {
       >
         長押しで見る
       </button>
-      <p className="mt-3 text-center text-sm leading-6 text-[#5a4631]">指を離すと数字が隠れます。<br /><span className="text-xs">キーボードはSpace / Enterを押して確認。</span></p>
+      <p className="mt-3 text-center text-sm leading-6 text-[#5a4631]">指を離すと数字{role ? 'と役職' : ''}が隠れます。<br /><span className="text-xs">キーボードはSpace / Enterを押して確認。</span></p>
     </div>
   )
 }

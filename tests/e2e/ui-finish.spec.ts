@@ -1,32 +1,36 @@
 import { expect, test } from '@playwright/test'
 
-test('ホームの文字と操作が小画面に収まり、画面遷移で見出しに戻る', async ({ page }) => {
-  await page.goto('/')
-  const play = page.getByRole('button', { name: /すぐ遊ぶ/ })
-  for (const width of [320, 390, 430]) {
-    await page.setViewportSize({ width, height: 844 })
-    expect(await play.evaluate((button) => Number.parseFloat(getComputedStyle(button).fontSize))).toBe(24)
-    expect(await play.evaluate((button) => Number(getComputedStyle(button).fontWeight))).toBeGreaterThanOrEqual(700)
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    const tagline = page.getByText('価値観をつなぐ。', { exact: true })
-    expect(await tagline.evaluate((element) => element.getBoundingClientRect().height)).toBe(28)
-  }
-  await play.click()
-  await page.getByLabel('人数', { exact: true }).selectOption('8')
-  await page.getByLabel('プレイヤー1', { exact: true }).fill('あき')
-  await page.getByLabel('プレイヤー1', { exact: true }).press('Enter')
-  await expect(page.getByLabel('プレイヤー2', { exact: true })).toBeFocused()
-  await page.getByRole('button', { name: 'お題を選ぶ', exact: true }).click()
-  await page.getByRole('button', { name: '戻る', exact: true }).click()
-  await expect(page.getByLabel('プレイヤー1', { exact: true })).toHaveValue('あき')
-  await page.getByRole('button', { name: '開始', exact: true }).click()
-  await expect(page.getByRole('heading', { name: '次は あき さんへ' })).toBeFocused()
-  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
-  await expect(page.locator('[aria-current="step"]')).toHaveText('1 確認')
-  await page.getByRole('button', { name: '見終わった', exact: true }).click()
-  await expect(page.getByRole('heading', { name: '次は プレイヤー2 さんへ' })).toBeFocused()
-  await expect(page.getByText('?', { exact: true })).toHaveCount(1)
-})
+for (const width of [320, 390, 430]) {
+  test.describe(`ホーム ${width}px`, () => {
+    // GTK WebKitは実行中のresizeでレイアウトが前の幅に残るため、起動時に実寸を指定する。
+    test.use({ viewport: { width, height: 844 } })
+    test('ホームの文字と操作が小画面に収まり、画面遷移で見出しに戻る', async ({ page }) => {
+      await page.goto('/')
+      const play = page.getByRole('button', { name: /すぐ遊ぶ/ })
+      expect(await page.evaluate(() => document.documentElement.clientWidth)).toBe(width)
+      expect(await play.evaluate((button) => Number.parseFloat(getComputedStyle(button).fontSize))).toBe(24)
+      expect(await play.evaluate((button) => Number(getComputedStyle(button).fontWeight))).toBeGreaterThanOrEqual(700)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+      const tagline = page.getByText('価値観をつなぐ。', { exact: true })
+      expect(await tagline.evaluate((element) => element.getBoundingClientRect().height)).toBe(28)
+      await play.click()
+      await page.getByLabel('人数', { exact: true }).selectOption('8')
+      await page.getByLabel('プレイヤー1', { exact: true }).fill('あき')
+      await page.getByLabel('プレイヤー1', { exact: true }).press('Enter')
+      await expect(page.getByLabel('プレイヤー2', { exact: true })).toBeFocused()
+      await page.getByRole('button', { name: 'お題を選ぶ', exact: true }).click()
+      await page.getByRole('button', { name: '戻る', exact: true }).click()
+      await expect(page.getByLabel('プレイヤー1', { exact: true })).toHaveValue('あき')
+      await page.getByRole('button', { name: '開始', exact: true }).click()
+      await expect(page.getByRole('heading', { name: '次は あき さんへ' })).toBeFocused()
+      await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
+      await expect(page.locator('[aria-current="step"]')).toHaveText('1 確認')
+      await page.getByRole('button', { name: '見終わった', exact: true }).click()
+      await expect(page.getByRole('heading', { name: '次は プレイヤー2 さんへ' })).toBeFocused()
+      await expect(page.getByText('?', { exact: true })).toHaveCount(1)
+    })
+  })
+}
 
 test('お題検索は設定を変えず、削除を戻すと内容とOFF状態が復帰する', async ({ page }) => {
   await page.goto('/')
