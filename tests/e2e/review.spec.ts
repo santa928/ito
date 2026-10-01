@@ -59,8 +59,9 @@ test('本人確認をキーボードで行え、解放と再確認の閉鎖で�
 })
 
 for (const count of [2, 3, 8]) {
-  test(`${count}人で結果まで進み、同じメンバーで再戦できる`, async ({ page }) => {
-    test.setTimeout(120_000) // Docker WebKitで実測約72秒かかる、8人の2ラウンド分の操作時間。
+  test(`${count}人で結果まで進み、同じメンバーで再戦できる`, async ({ page, browserName }) => {
+    // GTK WebKitの操作待ちでは8人の2ラウンドが120秒を超える。機能確認の実行猶予だけを延ばす。
+    test.setTimeout(browserName === 'webkit' ? 300_000 : 120_000)
     await startGame(page, count)
     for (let round = 1; round <= 2; round += 1) {
       await expect(page.getByRole('heading', { name: '次は プレイヤー1 さんへ' })).toBeVisible()

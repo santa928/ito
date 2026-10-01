@@ -121,7 +121,6 @@ export function App() {
         <RoundControls
           key={state.screen}
           roles={round.roles}
-          ascending={round.mode === 'werewolf'}
           topic={round.topic}
           players={round.players}
           cards={round.cards}
@@ -156,11 +155,11 @@ export function App() {
         <RevealScreen roles={round.roles} players={round.players} cards={round.cards} onComplete={() => dispatch({ type: 'go', screen: 'topic' })} />
       ) : null}
       {state.screen === 'topic' && round ? (
-        <TopicScreen ascending={round.mode === 'werewolf'} topic={round.topic} rerollDisabledReason={rerollDisabledReason} onReroll={rerollTopic} onNext={() => dispatch({ type: 'go', screen: 'sort' })} />
+        <TopicScreen werewolf={round.mode === 'werewolf'} topic={round.topic} rerollDisabledReason={rerollDisabledReason} onReroll={rerollTopic} onNext={() => dispatch({ type: 'go', screen: 'sort' })} />
       ) : null}
       {state.screen === 'sort' && round ? (
         <SortScreen
-          ascending={round.mode === 'werewolf'}
+          werewolf={round.mode === 'werewolf'}
           cards={round.cards}
           players={round.players}
           sortedCardIds={round.sortedCardIds}

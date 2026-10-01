@@ -4,13 +4,13 @@ import { normalizePlayers } from '../domain/game'
 import { createInitialState, reducer } from './appState'
 import type { AppState, AppAction } from './appState'
 
-function sorted(values = [10, 30, 60, 90], wolf = 0): AppState {
+function sorted(values = [90, 60, 30, 10], wolf = 0): AppState {
   let state = reducer(createInitialState(), { type: 'startRound', mode: 'werewolf', playerNames: values.map((_, i) => `P${i}`), cardValues: values, roleRandomValue: wolf })
   state = reducer(state, { type: 'go', screen: 'topic' })
   return reducer(state, { type: 'go', screen: 'sort' })
 }
 function voting(): AppState {
-  let state = reducer(sorted([90, 60, 30, 10]), { type: 'lockOrder' })
+  let state = reducer(sorted([10, 30, 60, 90]), { type: 'lockOrder' })
   state = reducer(state, { type: 'startDiscussion', now: 1000 })
   return reducer(state, { type: 'startVote', now: 61_000 })
 }
@@ -37,15 +37,22 @@ describe('人狼の状態遷移', () => {
     }
     for (const value of [-1, 1, NaN, Infinity]) expect(() => assignRoles(normalizePlayers(['', '', '', '']), value)).toThrow()
   })
-  it('小さい順なら投票なしで市民勝利、確定は一度だけ', () => {
+  it('高い順なら投票なしで市民勝利、確定は一度だけ', () => {
     const state = reducer(sorted(), { type: 'lockOrder' })
     expect(state.screen).toBe('result')
     expect(state.round?.verdict).toEqual({ winner: 'citizen', reason: 'order' })
     expect(state.session.playCount).toBe(1)
     expect(reducer(state, { type: 'lockOrder' })).toBe(state)
   })
+  it('低い順は不正解になり、勝敗を確定せず議論へ進む', () => {
+    const state = reducer(sorted([10, 30, 60, 90]), { type: 'lockOrder' })
+    expect(state.screen).toBe('discussion')
+    expect(state.round?.verdict).toBeNull()
+    expect(state.round?.mistakeCardIds).toHaveLength(4)
+    expect(state.session.playCount).toBe(0)
+  })
   it('通常のopen経路を拒否し、公開後は並びとお題を変更できない', () => {
-    const before = sorted([90, 60, 30, 10])
+    const before = sorted([10, 30, 60, 90])
     expect(reducer(before, { type: 'go', screen: 'open' })).toBe(before)
     const state = reducer(before, { type: 'lockOrder' })
     expect(state.screen).toBe('discussion')
@@ -54,7 +61,7 @@ describe('人狼の状態遷移', () => {
     for (const action of [{ type: 'setSortedCardIds', cardIds: ['card-4', 'card-3', 'card-2', 'card-1'] }, { type: 'go', screen: 'sort' }, { type: 'setTopic', topic: state.round!.topic }, { type: 'finishRound' }] as AppAction[]) expect(reducer(state, action)).toBe(state)
   })
   it('手動開始後60秒経過するまで投票不可、中断後も期限を維持', () => {
-    const state = reducer(sorted([90, 60, 30, 10]), { type: 'lockOrder' })
+    const state = reducer(sorted([10, 30, 60, 90]), { type: 'lockOrder' })
     expect(reducer(state, { type: 'startVote', now: 1_000_000 })).toBe(state)
     const started = reducer(state, { type: 'startDiscussion', now: 1000 })
     expect(reducer(started, { type: 'startDiscussion', now: 5000 })).toBe(started)

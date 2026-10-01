@@ -8,7 +8,7 @@ import { formatCardLabel } from '../domain/cardLabels'
 import type { Card, Player } from '../domain/types'
 
 type SortScreenProps = {
-  ascending?: boolean
+  werewolf?: boolean
   cards: Card[]
   players: Player[]
   sortedCardIds: string[]
@@ -17,7 +17,7 @@ type SortScreenProps = {
 }
 
 /** 相談結果として、伏せカードを高いと思う順に並べる画面。 */
-export function SortScreen({ cards, players, ascending, sortedCardIds, onChange, onNext }: SortScreenProps) {
+export function SortScreen({ cards, players, werewolf, sortedCardIds, onChange, onNext }: SortScreenProps) {
   const [confirming, setConfirming] = useState(false)
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
   const rowRefs = useRef(new Map<string, HTMLDivElement>())
@@ -85,7 +85,7 @@ export function SortScreen({ cards, players, ascending, sortedCardIds, onChange,
 
   return (
     <CardSurface>
-      <ScreenHeader eyebrow="相談" title={ascending ? '小さい順に並べる' : '高い順に並べる'} description={`${ascending ? '小さい順（1→100）' : '高い順（100→1）'}です。左の↕を押したまま動かすか、上下ボタンで並べます。名前の上ではスクロールできます。`} />
+      <ScreenHeader eyebrow="相談" title="高い順に並べる" description={`高い順（100→1）です。左の↕を押したまま動かすか、上下ボタンで並べます。名前の上ではスクロールできます。`} />
       <div className="grid gap-3">
         {sortedCardIds.map((cardId, index) => {
           const card = cards.find((candidate) => candidate.id === cardId)!
@@ -110,7 +110,7 @@ export function SortScreen({ cards, players, ascending, sortedCardIds, onChange,
                 ↕
               </button>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-[#806344]">{index + 1}番目に{ascending ? '小さい' : '高い'}</p>
+                <p className="text-xs font-bold text-[#806344]">{index + 1}番目に高い</p>
                 <p className="break-anywhere font-bold">{label}</p>
               </div>
               <div className="grid gap-2">
@@ -121,8 +121,8 @@ export function SortScreen({ cards, players, ascending, sortedCardIds, onChange,
           )
         })}
       </div>
-      <PrimaryButton className="mt-5 w-full" onClick={() => ascending ? setConfirming(true) : onNext()}>
-        {ascending ? '並びを確定・数字公開' : 'この順でオープン'}
+      <PrimaryButton className="mt-5 w-full" onClick={() => werewolf ? setConfirming(true) : onNext()}>
+        {werewolf ? '並びを確定・数字公開' : 'この順でオープン'}
       </PrimaryButton>
       {confirming ? <Modal label="並びを確定しますか？" onClose={() => setConfirming(false)}>
         <h2 className="text-2xl font-black">並びを確定しますか？</h2>

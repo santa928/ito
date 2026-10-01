@@ -165,7 +165,7 @@ export function reducer(state: AppState, action: AppAction): AppState {
     }
     case 'lockOrder': {
       if (!state.round || state.round.mode !== 'werewolf' || state.screen !== 'sort') return state
-      const expected = sortCardIdsByValue(state.round.cards, 'ascending')
+      const expected = sortCardIdsByValue(state.round.cards, 'descending')
       const mistakes = state.round.sortedCardIds.filter((id, index) => id !== expected[index])
       const correct = mistakes.length === 0
       return { ...state, screen: correct ? 'result' : 'discussion',

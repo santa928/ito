@@ -43,10 +43,10 @@ export function SetupScreen({ initialNames, mode = 'normal', onModeChange, playa
 
   return (
     <CardSurface>
-      <ScreenHeader eyebrow="準備" title="遊ぶ人を決める" description={mode === 'werewolf' ? '4〜8人・1人1枚。人狼1人、市民はほか全員。小さい順（1→100）に並べ、失敗したら議論と秘密投票。名前は24文字まで。' : '名前は24文字まで。空でも始められます。2〜3人は1人2枚、4〜8人は1人1枚です。'} />
+      <ScreenHeader eyebrow="準備" title="遊ぶ人を決める" description={mode === 'werewolf' ? '4〜8人・1人1枚。人狼1人、市民はほか全員。高い順（100→1）に並べ、失敗したら議論と秘密投票。名前は24文字まで。' : '名前は24文字まで。空でも始められます。2〜3人は1人2枚、4〜8人は1人1枚です。'} />
       <label className="mb-5 grid gap-2 text-sm font-bold">モード
         <select aria-label="モード" className="min-h-12 rounded-xl border border-[#c79b57] bg-[#fff8e9] px-3 text-base" value={mode} onChange={(event) => onModeChange?.(event.target.value as GameMode)}>
-          <option value="normal">通常（100→1）</option><option value="werewolf">人狼（1→100・4〜8人）</option>
+          <option value="normal">通常（100→1）</option><option value="werewolf">人狼（100→1・4〜8人）</option>
         </select>
       </label>
       <div className="mb-5 grid gap-3 rounded-xl border border-[#d8c3a0] bg-[#fffaf0] p-3">

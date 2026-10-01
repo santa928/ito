@@ -12,11 +12,18 @@ async function setup(page: Page, count = 4, names: string[] = []) {
   for (const [index, name] of names.entries()) await page.getByLabel(`プレイヤー${index + 1}`, { exact: true }).fill(name)
   await page.getByRole('button', { name: '開始', exact: true }).click()
 }
-async function sort(page: Page, count: number) {
+async function sort(page: Page, count: number, correctOrder = false) {
   for (let i = 1; i < count; i++) await page.getByRole('button', { name: '見終わった', exact: true }).click()
   await page.getByRole('button', { name: '相談へ進む' }).click()
-  await expect(page.getByText('小さい順（1→100）', { exact: false })).toBeVisible()
+  await expect(page.getByText('高い順（100→1）', { exact: false })).toBeVisible()
   await page.getByRole('button', { name: '相談して並べ替える' }).click()
+  await expect(page.getByRole('heading', { name: '高い順に並べる' })).toBeVisible()
+  if (correctOrder) {
+    // 乱数0の配札1..人数を、利用者と同じ上下ボタンで高い順へ並べる。
+    for (let player = 2; player <= count; player++) {
+      for (let step = 1; step < player; step++) await page.getByRole('button', { name: `プレイヤー${player} のカードを上へ`, exact: true }).click()
+    }
+  }
 }
 async function lock(page: Page) {
   await page.getByRole('button', { name: '並びを確定・数字公開', exact: true }).click()
@@ -46,7 +53,7 @@ for (const count of [4, 8]) {
     await page.evaluate(() => window.dispatchEvent(new Event('blur')))
     await expect(page.getByText('役職:', { exact: false })).toHaveCount(0)
     await page.keyboard.up('Enter')
-    await sort(page, count)
+    await sort(page, count, true)
     await page.getByRole('button', { name: 'カード確認', exact: true }).click()
     const dialog = page.getByRole('dialog', { name: 'カード再確認' })
     await dialog.getByRole('button', { name: '長押しで見る' }).focus()
@@ -65,11 +72,21 @@ for (const count of [4, 8]) {
     await page.getByRole('button', { name: 'もう一度' }).click()
     await expect(page.getByText('?', { exact: true })).toHaveCount(1)
     await expect(page.getByText('役職:', { exact: false })).toHaveCount(0)
-    await sort(page, count)
+    await sort(page, count, true)
     await lock(page)
     await expect(page.getByRole('heading', { name: '市民の勝利！' })).toBeVisible()
   })
 }
+test('人狼の低い順は議論へ進み、高い順の説明と確定確認を維持する', async ({ page }) => {
+  await setup(page)
+  await sort(page, 4)
+  await page.getByRole('button', { name: 'お題', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: 'お題確認' })).toContainText('高い順（100→1）')
+  await page.getByRole('button', { name: '閉じる', exact: true }).click()
+  await lock(page)
+  await expect(page.getByRole('heading', { name: '数字を見て議論' })).toBeVisible()
+  await expect(page.getByRole('list', { name: '確定した並び' }).getByText('人狼', { exact: true })).toHaveCount(0)
+})
 for (const outcome of ['caught', 'escaped', 'tie'] as const) {
   test(`公開後の議論・秘密投票・${outcome}`, async ({ page }) => {
     await page.clock.install()

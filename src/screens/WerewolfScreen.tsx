@@ -53,7 +53,7 @@ function PrivateBallot({ round, dispatch }: { round: RoundState; dispatch: (acti
 }
 
 const reasons = {
-  order: '小さい順（1→100）に正しく並びました。投票なしで市民の勝利です。',
+  order: '高い順（100→1）に正しく並びました。投票なしで市民の勝利です。',
   caught: '最多票の1人が人狼でした。市民の勝利です。',
   escaped: '最多票の1人は市民でした。人狼が逃げ切りました。',
   tie: '再投票でも同票でした。人狼を1人に絞れず、人狼が逃げ切りました。',
